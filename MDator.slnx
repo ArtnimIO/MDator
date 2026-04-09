@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MDator.Abstractions/MDator.Abstractions.csproj" />
+    <Project Path="src/MDator.SourceGenerator/MDator.SourceGenerator.csproj" />
+    <Project Path="src/MDator/MDator.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MDator.Tests/MDator.Tests.csproj" />
+  </Folder>
+</Solution>

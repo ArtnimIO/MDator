@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <RootNamespace>MDator</RootNamespace>
+    <PackageId>MDator</PackageId>
+    <AssemblyName>MDator</AssemblyName>
+    <Description>A source-generated, MediatR-compatible mediator for .NET. Replaces MediatR's runtime reflection with compile-time dispatch, pipeline fusion, and zero-reflection handler registration.</Description>
+
+    <!-- Ensure consumers of the nupkg get the source generator activated automatically. -->
+    <DevelopmentDependency>false</DevelopmentDependency>
+    <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MDator.Abstractions\MDator.Abstractions.csproj" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Build-time reference so the generator runs during compilation of projects
+         that reference MDator. -->
+    <ProjectReference Include="..\MDator.SourceGenerator\MDator.SourceGenerator.csproj"
+                      PrivateAssets="all"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="Analyzer" />
+
+    <!-- Bundle the generator DLL into the nupkg so consumers get it automatically. -->
+    <None Include="..\MDator.SourceGenerator\bin\$(Configuration)\netstandard2.0\MDator.SourceGenerator.dll"
+          Pack="true"
+          PackagePath="analyzers/dotnet/cs"
+          Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

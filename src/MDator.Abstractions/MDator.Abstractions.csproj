@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <!-- netstandard2.0 does not define ImplicitUsings -->
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>MDator</RootNamespace>
+    <PackageId>MDator.Abstractions</PackageId>
+    <AssemblyName>MDator.Abstractions</AssemblyName>
+    <Description>Interfaces and abstractions for MDator, a source-generated MediatR-compatible mediator. Reference this package from handler libraries that don't need the source generator or DI integration.</Description>
+    <PolySharpIncludeRuntimeSupportedAttributes>true</PolySharpIncludeRuntimeSupportedAttributes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Polyfills so we can use modern C# features (nullability, init-only, etc.) on netstandard2.0. -->
+    <PackageReference Include="PolySharp" Version="1.14.1" PrivateAssets="all" />
+    <!-- IAsyncEnumerable<T> polyfill for netstandard2.0. -->
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

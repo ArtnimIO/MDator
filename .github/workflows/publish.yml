@@ -1,0 +1,66 @@
+name: Build, Test & Publish
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  CONFIGURATION: Release
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history required by Nerdbank.GitVersioning
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+
+      - name: Restore
+        run: dotnet restore MDator.slnx
+
+      - name: Build
+        run: dotnet build MDator.slnx -c "$CONFIGURATION" --no-restore
+
+      - name: Test
+        run: dotnet test MDator.slnx -c "$CONFIGURATION" --no-build --verbosity normal
+
+      - name: Pack
+        run: |
+          dotnet pack src/MDator.Abstractions/MDator.Abstractions.csproj -c "$CONFIGURATION" --no-build -o artifacts
+          dotnet pack src/MDator/MDator.csproj -c "$CONFIGURATION" --no-build -o artifacts
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/*.nupkg
+
+  publish:
+    needs: build-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Push to NuGet
+        env:
+          NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key "$NUGET_APIKEY" --source https://api.nuget.org/v3/index.json --skip-duplicate

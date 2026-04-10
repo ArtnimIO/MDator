@@ -158,65 +158,47 @@ internal static class MediatorEmitter
         w.Line();
 
         // Request handlers with response
-        foreach (var kv in requestHandlers)
+        foreach (var h in requestHandlers.Select(kv => kv.Value))
         {
-            var h = kv.Value;
             w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof({h.HandlerType.GlobalName}), typeof({h.HandlerType.GlobalName}), lt));");
             w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::MDator.IRequestHandler<{h.MessageType.GlobalName}, {h.ResponseType!.GlobalName}>), static sp => sp.GetRequiredService<{h.HandlerType.GlobalName}>(), lt));");
         }
         // Void handlers
-        foreach (var kv in voidHandlers)
+        foreach (var h in voidHandlers.Select(kv => kv.Value))
         {
-            var h = kv.Value;
             w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof({h.HandlerType.GlobalName}), typeof({h.HandlerType.GlobalName}), lt));");
             w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::MDator.IRequestHandler<{h.MessageType.GlobalName}>), static sp => sp.GetRequiredService<{h.HandlerType.GlobalName}>(), lt));");
         }
         // Stream handlers
-        foreach (var kv in streamHandlers)
+        foreach (var h in streamHandlers.Select(kv => kv.Value))
         {
-            var h = kv.Value;
             w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof({h.HandlerType.GlobalName}), typeof({h.HandlerType.GlobalName}), lt));");
             w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::MDator.IStreamRequestHandler<{h.MessageType.GlobalName}, {h.ResponseType!.GlobalName}>), static sp => sp.GetRequiredService<{h.HandlerType.GlobalName}>(), lt));");
         }
         // Notification handlers (multiple per type, AddEnumerable-style via raw Add)
-        foreach (var kv in notificationHandlers)
+        foreach (var h in notificationHandlers.SelectMany(kv => kv.Value))
         {
-            foreach (var h in kv.Value)
-            {
-                w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::MDator.INotificationHandler<{h.MessageType.GlobalName}>), typeof({h.HandlerType.GlobalName}), lt));");
-            }
+            w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::MDator.INotificationHandler<{h.MessageType.GlobalName}>), typeof({h.HandlerType.GlobalName}), lt));");
         }
         // Pre-processors
-        foreach (var kv in preProcessors)
+        foreach (var h in preProcessors.SelectMany(kv => kv.Value))
         {
-            foreach (var h in kv.Value)
-            {
-                w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::MDator.IRequestPreProcessor<{h.MessageType.GlobalName}>), typeof({h.HandlerType.GlobalName}), lt));");
-            }
+            w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::MDator.IRequestPreProcessor<{h.MessageType.GlobalName}>), typeof({h.HandlerType.GlobalName}), lt));");
         }
         // Post-processors
-        foreach (var kv in postProcessors)
+        foreach (var h in postProcessors.SelectMany(kv => kv.Value))
         {
-            foreach (var h in kv.Value)
-            {
-                w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::MDator.IRequestPostProcessor<{h.MessageType.GlobalName}, {h.ResponseType!.GlobalName}>), typeof({h.HandlerType.GlobalName}), lt));");
-            }
+            w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::MDator.IRequestPostProcessor<{h.MessageType.GlobalName}, {h.ResponseType!.GlobalName}>), typeof({h.HandlerType.GlobalName}), lt));");
         }
         // Exception handlers
-        foreach (var kv in exceptionHandlers)
+        foreach (var h in exceptionHandlers.SelectMany(kv => kv.Value))
         {
-            foreach (var h in kv.Value)
-            {
-                w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::MDator.IRequestExceptionHandler<{h.MessageType.GlobalName}, {h.ResponseType!.GlobalName}, {h.ExceptionType!.GlobalName}>), typeof({h.HandlerType.GlobalName}), lt));");
-            }
+            w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::MDator.IRequestExceptionHandler<{h.MessageType.GlobalName}, {h.ResponseType!.GlobalName}, {h.ExceptionType!.GlobalName}>), typeof({h.HandlerType.GlobalName}), lt));");
         }
         // Exception actions
-        foreach (var kv in exceptionActions)
+        foreach (var h in exceptionActions.SelectMany(kv => kv.Value))
         {
-            foreach (var h in kv.Value)
-            {
-                w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::MDator.IRequestExceptionAction<{h.MessageType.GlobalName}, {h.ExceptionType!.GlobalName}>), typeof({h.HandlerType.GlobalName}), lt));");
-            }
+            w.Line($"services.Add(new global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(global::MDator.IRequestExceptionAction<{h.MessageType.GlobalName}, {h.ExceptionType!.GlobalName}>), typeof({h.HandlerType.GlobalName}), lt));");
         }
         // Closed pipeline behaviors discovered by class scan. Registered under the
         // framework interface so the runtime enumeration fallback picks them up.
@@ -311,9 +293,8 @@ internal static class MediatorEmitter
         w.OpenBrace();
         w.Line("switch (request)");
         w.OpenBrace();
-        foreach (var kv in requestHandlers)
+        foreach (var h in requestHandlers.Select(kv => kv.Value))
         {
-            var h = kv.Value;
             w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
             w.Indent();
             w.Line($"return (global::System.Threading.Tasks.Task<TResponse>)(object)SendCore_{h.MessageType.Identifier}(__req_{h.MessageType.Identifier}, cancellationToken);");
@@ -340,9 +321,8 @@ internal static class MediatorEmitter
         w.OpenBrace();
         w.Line("switch (request)");
         w.OpenBrace();
-        foreach (var kv in voidHandlers)
+        foreach (var h in voidHandlers.Select(kv => kv.Value))
         {
-            var h = kv.Value;
             w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
             w.Indent();
             w.Line($"return SendVoidCore_{h.MessageType.Identifier}(__req_{h.MessageType.Identifier}, cancellationToken);");
@@ -366,17 +346,15 @@ internal static class MediatorEmitter
         w.OpenBrace();
         w.Line("switch (request)");
         w.OpenBrace();
-        foreach (var kv in requestHandlers)
+        foreach (var h in requestHandlers.Select(kv => kv.Value))
         {
-            var h = kv.Value;
             w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
             w.Indent();
             w.Line($"return await SendCore_{h.MessageType.Identifier}(__req_{h.MessageType.Identifier}, cancellationToken).ConfigureAwait(false);");
             w.Dedent();
         }
-        foreach (var kv in voidHandlers)
+        foreach (var h in voidHandlers.Select(kv => kv.Value))
         {
-            var h = kv.Value;
             w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
             w.Indent();
             w.Line($"await SendVoidCore_{h.MessageType.Identifier}(__req_{h.MessageType.Identifier}, cancellationToken).ConfigureAwait(false); return null;");
@@ -397,9 +375,8 @@ internal static class MediatorEmitter
         w.OpenBrace();
         w.Line("switch (request)");
         w.OpenBrace();
-        foreach (var kv in streamHandlers)
+        foreach (var h in streamHandlers.Select(kv => kv.Value))
         {
-            var h = kv.Value;
             w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
             w.Indent();
             w.Line($"return (global::System.Collections.Generic.IAsyncEnumerable<TResponse>)(object)StreamCore_{h.MessageType.Identifier}(__req_{h.MessageType.Identifier}, cancellationToken);");
@@ -431,9 +408,8 @@ internal static class MediatorEmitter
 
         w.Line("public async global::System.Collections.Generic.IAsyncEnumerable<object?> CreateStream(object request, [global::System.Runtime.CompilerServices.EnumeratorCancellation] global::System.Threading.CancellationToken cancellationToken = default)");
         w.OpenBrace();
-        foreach (var kv in streamHandlers)
+        foreach (var h in streamHandlers.Select(kv => kv.Value))
         {
-            var h = kv.Value;
             w.Line($"if (request is {h.MessageType.GlobalName} __req_{h.MessageType.Identifier})");
             w.OpenBrace();
             w.Line($"await foreach (var __item in StreamCore_{h.MessageType.Identifier}(__req_{h.MessageType.Identifier}, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))");
@@ -454,9 +430,8 @@ internal static class MediatorEmitter
         w.OpenBrace();
         w.Line("switch (notification)");
         w.OpenBrace();
-        foreach (var kv in notificationHandlers)
+        foreach (HandlerInfo? first in notificationHandlers.Select(kv => kv.Value[0]))
         {
-            var first = kv.Value[0];
             w.Line($"case {first.MessageType.GlobalName} __n_{first.MessageType.Identifier}:");
             w.Indent();
             w.Line($"return PublishCore_{first.MessageType.Identifier}(__n_{first.MessageType.Identifier}, cancellationToken);");
@@ -479,9 +454,8 @@ internal static class MediatorEmitter
         w.Line("if (notification is not global::MDator.INotification) throw new global::System.ArgumentException(\"MDator: Publish requires an INotification instance.\", nameof(notification));");
         w.Line("switch (notification)");
         w.OpenBrace();
-        foreach (var kv in notificationHandlers)
+        foreach (HandlerInfo? first in notificationHandlers.Select(kv => kv.Value[0]))
         {
-            var first = kv.Value[0];
             w.Line($"case {first.MessageType.GlobalName} __n_{first.MessageType.Identifier}:");
             w.Indent();
             w.Line($"return PublishCore_{first.MessageType.Identifier}(__n_{first.MessageType.Identifier}, cancellationToken);");
@@ -570,7 +544,7 @@ internal static class MediatorEmitter
         w.Line();
 
         // Exception wrap.
-        if ((exHandlers is { Count: > 0 }) || (exActions is { Count: > 0 }))
+        if (exHandlers is { Count: > 0 } || exActions is { Count: > 0 })
         {
             w.Line("try");
             w.OpenBrace();
@@ -731,5 +705,4 @@ internal static class MediatorEmitter
         w.CloseBrace();
         w.Line();
     }
-
 }

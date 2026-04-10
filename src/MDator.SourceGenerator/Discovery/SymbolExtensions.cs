@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace MDator.SourceGenerator;
@@ -14,18 +15,9 @@ internal static class SymbolExtensions
 
         var isOpen = false;
         var arity = 0;
-        if (symbol is INamedTypeSymbol nts)
-        {
-            arity = nts.OriginalDefinition.Arity;
-            if (nts.IsUnboundGenericType) isOpen = true;
-            else
-            {
-                foreach (var ta in nts.TypeArguments)
-                {
-                    if (ta.TypeKind == TypeKind.TypeParameter) { isOpen = true; break; }
-                }
-            }
-        }
+        if (symbol is not INamedTypeSymbol nts) return new TypeRef(globalName, simpleName, isOpen, arity);
+        arity = nts.OriginalDefinition.Arity;
+        if (nts.IsUnboundGenericType || Enumerable.Any(nts.TypeArguments, ta => ta.TypeKind == TypeKind.TypeParameter)) isOpen = true;
         return new TypeRef(globalName, simpleName, isOpen, arity);
     }
 
@@ -33,10 +25,7 @@ internal static class SymbolExtensions
     /// Walks up the inheritance chain and yields every interface the type implements
     /// (including inherited). Used to classify a handler class.
     /// </summary>
-    public static IEnumerable<INamedTypeSymbol> AllInterfaces(this INamedTypeSymbol symbol)
-    {
-        foreach (var i in symbol.AllInterfaces) yield return i;
-    }
+    public static IEnumerable<INamedTypeSymbol> AllInterfaces(this INamedTypeSymbol symbol) => symbol.AllInterfaces;
 
     /// <summary>
     /// Does <paramref name="candidate"/> match <paramref name="metadataName"/>

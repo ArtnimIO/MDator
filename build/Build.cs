@@ -74,6 +74,22 @@ class Build : NukeBuild
             }
         });
 
+    Target SampleCompile => _ => _
+        .DependsOn(Pack)
+        .Executes(() =>
+        {
+            var samplesSolution = RootDirectory / "samples" / "Samples.slnx";
+
+            DotNetTasks.DotNetRestore(s => s
+                .SetProjectFile(samplesSolution)
+                .AddSources(OutputDirectory));
+
+            DotNetTasks.DotNetBuild(s => s
+                .SetProjectFile(samplesSolution)
+                .SetConfiguration(Configuration)
+                .SetNoRestore(true));
+        });
+
     Target Publish => _ => _
         .DependsOn(Pack)
         .Requires(() => NuGetApiKey)

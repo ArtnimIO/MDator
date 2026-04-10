@@ -13,12 +13,7 @@ namespace MDator;
 /// fallback path, which is fine but slower than the generated switch.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
-public sealed class KnownRequestAttribute : Attribute
+public sealed class KnownRequestAttribute(Type requestType) : Attribute
 {
-    public Type RequestType { get; }
-
-    public KnownRequestAttribute(Type requestType)
-    {
-        RequestType = requestType;
-    }
+    public Type RequestType { get; } = requestType;
 }

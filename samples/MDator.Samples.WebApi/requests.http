@@ -1,0 +1,78 @@
+@baseUrl = http://localhost:5000
+
+### List all products
+GET {{baseUrl}}/products
+
+### Get a single product (replace with actual ID from list)
+GET {{baseUrl}}/products/{{productId}}
+
+### Search products
+GET {{baseUrl}}/products/search?term=mouse
+
+### Create a product
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "Monitor Stand",
+  "sku": "ELEC-004",
+  "description": "Adjustable aluminum monitor stand",
+  "price": 59.99,
+  "stockQuantity": 25,
+  "categoryId": null
+}
+
+### Update a product (replace ID)
+PUT {{baseUrl}}/products/{{productId}}
+Content-Type: application/json
+
+{
+  "name": "Wireless Mouse Pro",
+  "sku": "ELEC-001",
+  "description": "Ergonomic wireless mouse — updated",
+  "price": 34.99,
+  "categoryId": null
+}
+
+### Delete a product (replace ID)
+DELETE {{baseUrl}}/products/{{productId}}
+
+### Stream all products (SSE)
+GET {{baseUrl}}/products/stream
+
+### Adjust stock (reduce by 2)
+POST {{baseUrl}}/stock/{{productId}}/adjust
+Content-Type: application/json
+
+{
+  "delta": -2
+}
+
+### Adjust stock (trigger low stock — reduce Mechanical Keyboard by 2, it starts at 3)
+POST {{baseUrl}}/stock/{{keyboardProductId}}/adjust
+Content-Type: application/json
+
+{
+  "delta": -2
+}
+
+### Get stock alerts
+GET {{baseUrl}}/stock/alerts
+
+### Stream stock alerts (SSE)
+GET {{baseUrl}}/stock/alerts/stream
+
+### Create a category
+POST {{baseUrl}}/categories
+Content-Type: application/json
+
+{
+  "name": "Accessories",
+  "description": "Computer accessories and peripherals"
+}
+
+### List categories
+GET {{baseUrl}}/categories
+
+### Get a category (replace ID)
+GET {{baseUrl}}/categories/{{categoryId}}

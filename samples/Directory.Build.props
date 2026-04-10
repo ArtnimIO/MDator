@@ -1,0 +1,10 @@
+<Project>
+  <!-- Import root defaults (LangVersion, Nullable, etc.) -->
+  <Import Project="../Directory.Build.props" />
+
+  <PropertyGroup>
+    <!-- Samples are not packable -->
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>

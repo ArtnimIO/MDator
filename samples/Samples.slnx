@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="MDator.Samples.Domain/MDator.Samples.Domain.csproj" />
+  <Project Path="MDator.Samples.Console/MDator.Samples.Console.csproj" />
+  <Project Path="MDator.Samples.WebApi/MDator.Samples.WebApi.csproj" />
+</Solution>

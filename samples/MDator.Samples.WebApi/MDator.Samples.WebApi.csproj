@@ -14,6 +14,9 @@
   </ItemGroup>
   <ItemGroup Condition="'$(UseMDatorSource)' == 'true'">
     <ProjectReference Include="..\..\src\MDator\MDator.csproj" />
+    <ProjectReference Include="..\..\src\MDator.SourceGenerator\MDator.SourceGenerator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>

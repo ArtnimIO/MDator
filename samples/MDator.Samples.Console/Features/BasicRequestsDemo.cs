@@ -10,7 +10,7 @@ namespace MDator.Samples.Console.Features;
 
 public record CreateProductCommand(string Name, string Sku, decimal Price) : IRequest<Product>;
 
-public record GetProductByIdQuery(Guid Id) : IRequest<Product?>;
+public record GetProductByIdQuery(Guid Id) : IRequest<Product>;
 
 public record DeleteProductCommand(Guid Id) : IRequest;
 
@@ -26,10 +26,10 @@ public sealed class CreateProductHandler(IProductRepository repo) : IRequestHand
     }
 }
 
-public sealed class GetProductByIdHandler(IProductRepository repo) : IRequestHandler<GetProductByIdQuery, Product?>
+public sealed class GetProductByIdHandler(IProductRepository repo) : IRequestHandler<GetProductByIdQuery, Product>
 {
-    public Task<Product?> Handle(GetProductByIdQuery request, CancellationToken ct)
-        => repo.GetByIdAsync(request.Id, ct);
+    public async Task<Product> Handle(GetProductByIdQuery request, CancellationToken ct)
+        => await repo.GetByIdAsync(request.Id, ct) ?? throw new KeyNotFoundException($"Product {request.Id} not found.");
 }
 
 public sealed class DeleteProductHandler(IProductRepository repo) : IRequestHandler<DeleteProductCommand>
@@ -68,7 +68,7 @@ public static class BasicRequestsDemo
         System.Console.WriteLine("[GetProductById Query]");
         System.Console.ResetColor();
         var fetched = await mediator.Send(new GetProductByIdQuery(product.Id));
-        System.Console.WriteLine($"  Fetched: {fetched?.Name ?? "not found"}");
+        System.Console.WriteLine($"  Fetched: {fetched.Name}");
 
         // Void request
         System.Console.WriteLine();
@@ -76,7 +76,13 @@ public static class BasicRequestsDemo
         System.Console.WriteLine("[DeleteProduct Void Request]");
         System.Console.ResetColor();
         await mediator.Send(new DeleteProductCommand(product.Id));
-        var deleted = await mediator.Send(new GetProductByIdQuery(product.Id));
-        System.Console.WriteLine($"  After delete: {(deleted is null ? "not found (deleted)" : deleted.Name)}");
+        try
+        {
+            await mediator.Send(new GetProductByIdQuery(product.Id));
+        }
+        catch (KeyNotFoundException)
+        {
+            System.Console.WriteLine("  After delete: not found (deleted)");
+        }
     }
 }

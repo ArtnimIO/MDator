@@ -1,5 +1,3 @@
-using MDator;
-
 namespace MDator.Samples.WebApi.Notifications;
 
 public record LowStockDetectedNotification(Guid ProductId, string ProductName, int CurrentQuantity) : INotification;

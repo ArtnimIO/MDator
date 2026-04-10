@@ -1,4 +1,3 @@
-using MDator;
 using MDator.Samples.WebApi.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 

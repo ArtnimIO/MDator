@@ -23,23 +23,18 @@ namespace MDator;
 /// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
-public sealed class OpenBehaviorAttribute : Attribute
+public sealed class OpenBehaviorAttribute(Type behaviorType) : Attribute
 {
     /// <summary>
     /// The open-generic behavior type, e.g. <c>typeof(LoggingBehavior&lt;,&gt;)</c>.
     /// Must be an open generic implementing <see cref="IPipelineBehavior{TRequest, TResponse}"/>
     /// or <see cref="IStreamPipelineBehavior{TRequest, TResponse}"/>.
     /// </summary>
-    public Type BehaviorType { get; }
+    public Type BehaviorType { get; } = behaviorType;
 
     /// <summary>
     /// Order in the pipeline. Lower values run outermost (closer to the caller).
     /// Defaults to 0.
     /// </summary>
     public int Order { get; set; }
-
-    public OpenBehaviorAttribute(Type behaviorType)
-    {
-        BehaviorType = behaviorType;
-    }
 }

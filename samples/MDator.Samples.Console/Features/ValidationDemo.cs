@@ -1,5 +1,4 @@
 using FluentValidation;
-using MDator;
 using MDator.Samples.Domain.Interfaces;
 using MDator.Samples.Console.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;

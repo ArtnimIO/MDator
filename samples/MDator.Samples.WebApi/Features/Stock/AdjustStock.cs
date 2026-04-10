@@ -1,4 +1,3 @@
-using MDator;
 using MDator.Samples.Domain.Interfaces;
 using MDator.Samples.WebApi.ExceptionHandling;
 using MDator.Samples.WebApi.Notifications;

@@ -1,5 +1,4 @@
 using FluentValidation;
-using MDator;
 
 namespace MDator.Samples.WebApi.Behaviors;
 

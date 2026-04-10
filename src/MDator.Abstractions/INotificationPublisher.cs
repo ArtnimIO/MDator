@@ -9,24 +9,20 @@ namespace MDator;
 /// handler plus the notification instance. The publisher strategy decides how to
 /// schedule these.
 /// </summary>
-public readonly struct NotificationHandlerExecutor
+public readonly struct NotificationHandlerExecutor(
+    object handlerInstance,
+    System.Func<INotification, CancellationToken, Task> callback)
 {
-    public NotificationHandlerExecutor(object handlerInstance, System.Func<INotification, CancellationToken, Task> callback)
-    {
-        HandlerInstance = handlerInstance;
-        HandlerCallback = callback;
-    }
-
     /// <summary>
     /// The handler instance. Exposed so publishers can do identity-based dedupe
     /// when the same handler is subscribed to multiple base notification types.
     /// </summary>
-    public object HandlerInstance { get; }
+    public object HandlerInstance { get; } = handlerInstance;
 
     /// <summary>
     /// Invokes the handler with the notification.
     /// </summary>
-    public System.Func<INotification, CancellationToken, Task> HandlerCallback { get; }
+    public System.Func<INotification, CancellationToken, Task> HandlerCallback { get; } = callback;
 }
 
 /// <summary>

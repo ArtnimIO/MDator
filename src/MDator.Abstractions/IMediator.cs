@@ -6,4 +6,4 @@ namespace MDator;
 /// on one of the narrower interfaces when they want to restrict their code to a
 /// single responsibility.
 /// </summary>
-public interface IMediator : ISender, IPublisher { }
+public interface IMediator : ISender, IPublisher;

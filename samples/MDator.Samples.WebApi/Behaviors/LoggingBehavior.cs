@@ -1,5 +1,3 @@
-using MDator;
-
 namespace MDator.Samples.WebApi.Behaviors;
 
 public sealed class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TRequest, TResponse>> logger)

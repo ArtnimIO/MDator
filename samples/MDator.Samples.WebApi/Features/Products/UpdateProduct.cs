@@ -1,5 +1,4 @@
 using FluentValidation;
-using MDator;
 using MDator.Samples.Domain.Interfaces;
 using MDator.Samples.Domain.Models;
 using MDator.Samples.WebApi.ExceptionHandling;

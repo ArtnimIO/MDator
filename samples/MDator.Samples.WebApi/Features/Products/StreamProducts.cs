@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using MDator;
 using MDator.Samples.Domain.Interfaces;
 using MDator.Samples.Domain.Models;
 

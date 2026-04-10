@@ -17,7 +17,7 @@ internal sealed record TypeRef(
     string GlobalName,
     string SimpleName,
     bool IsOpenGeneric,
-    int TypeArity = 0) : IEquatable<TypeRef>
+    int TypeArity = 0)
 {
     public string Identifier
     {

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Replace the raw `dotnet` CLI calls in the GitHub Actions workflow with a Nuke build project that owns the full pipeline: clean, restore, compile, test, pack, and publish.
+Replace the raw `dotnet` CLI calls in the GitHub Actions workflow with a Nuke build project that owns the full pipeline: clean, restore, compile, test, pack, and publish. As part of this change, `net8.0` is dropped from `MDator.csproj` targets since .NET 10 is LTS — the library now targets `net9.0;net10.0`.
 
 ## Build Project Structure
 
@@ -45,7 +45,7 @@ The GitHub Actions workflow (`publish.yml`) simplifies to:
 
 ### `build-test` job
 1. Checkout with `fetch-depth: 0` (full history for Nerdbank.GitVersioning)
-2. Setup .NET SDKs: `8.0.x`, `9.0.x`, `10.0.x`
+2. Setup .NET SDKs: `9.0.x`, `10.0.x`
 3. Run `./build.sh Compile Test Pack`
 4. Upload `output/*.nupkg` as artifact
 

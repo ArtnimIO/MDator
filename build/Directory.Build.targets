@@ -1,0 +1,3 @@
+<Project>
+  <!-- Isolate the build project from the repo-root Directory.Build.targets -->
+</Project>

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <!-- Tests have enough XML-comment holes that we don't want doc warnings here. -->
     <GenerateDocumentationFile>false</GenerateDocumentationFile>

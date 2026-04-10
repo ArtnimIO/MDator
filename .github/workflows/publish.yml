@@ -9,7 +9,6 @@ on:
 env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
-  CONFIGURATION: Release
 
 jobs:
   build-test:
@@ -22,45 +21,38 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
-            8.0.x
             9.0.x
+            10.0.x
 
-      - name: Restore
-        run: dotnet restore MDator.slnx
-
-      - name: Build
-        run: dotnet build MDator.slnx -c "$CONFIGURATION" --no-restore
-
-      - name: Test
-        run: dotnet test MDator.slnx -c "$CONFIGURATION" --no-build --verbosity normal
-
-      - name: Pack
-        run: |
-          dotnet pack src/MDator.Abstractions/MDator.Abstractions.csproj -c "$CONFIGURATION" --no-build -o artifacts
-          dotnet pack src/MDator/MDator.csproj -c "$CONFIGURATION" --no-build -o artifacts
+      - name: Build, Test & Pack
+        run: ./build.sh Compile Test Pack
 
       - name: Upload packages
         uses: actions/upload-artifact@v6
         with:
           name: nuget-packages
-          path: artifacts/*.nupkg
+          path: output/*.nupkg
 
   publish:
     needs: build-test
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
       - name: Download packages
         uses: actions/download-artifact@v7
         with:
           name: nuget-packages
-          path: artifacts
+          path: output
 
       - uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
 
       - name: Push to NuGet
+        run: ./build.sh Publish --nuget-api-key "$NUGET_APIKEY"
         env:
           NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
-        run: dotnet nuget push "artifacts/*.nupkg" --api-key "$NUGET_APIKEY" --source https://api.nuget.org/v3/index.json --skip-duplicate

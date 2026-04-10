@@ -4,4 +4,4 @@ namespace MDator;
 /// Marks a request whose handler produces an asynchronous stream of
 /// <typeparamref name="TResponse"/> values.
 /// </summary>
-public interface IStreamRequest<out TResponse> { }
+public interface IStreamRequest<out TResponse>;

@@ -16,16 +16,16 @@ internal readonly struct EquatableArray<T>(T[] items) : IEquatable<EquatableArra
 {
     public static readonly EquatableArray<T> Empty = new([]);
 
-    private readonly T[] _items = items;
+    private T[] Items { get; } = items;
 
-    public int Count => _items?.Length ?? 0;
+    public int Count => Items?.Length ?? 0;
 
-    public T this[int index] => _items[index];
+    public T this[int index] => Items[index];
 
     public bool Equals(EquatableArray<T> other)
     {
-        var a = _items ?? [];
-        var b = other._items;
+        var a = Items ?? [];
+        var b = other.Items;
         if (a.Length != b.Length) return false;
         return !a.Where((t, i) => !EqualityComparer<T>.Default.Equals(t, b[i])).Any();
     }
@@ -34,14 +34,14 @@ internal readonly struct EquatableArray<T>(T[] items) : IEquatable<EquatableArra
 
     public override int GetHashCode()
     {
-        if (_items is null) return 0;
+        if (Items is null) return 0;
         unchecked
         {
-            return _items.Aggregate(17, (current, item) => current * 31 + (item?.GetHashCode() ?? 0));
+            return Items.Aggregate(17, (current, item) => current * 31 + (item?.GetHashCode() ?? 0));
         }
     }
 
-    public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>)(_items ?? [])).GetEnumerator();
+    public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>)(Items ?? [])).GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public static EquatableArray<T> From(IEnumerable<T> source) => new(source.ToArray());

@@ -1,4 +1,3 @@
-using MDator;
 using MDator.Samples.WebApi.Features.Products;
 
 namespace MDator.Samples.WebApi.Processors;

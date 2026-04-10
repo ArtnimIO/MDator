@@ -1,4 +1,3 @@
-using MDator;
 using MDator.Samples.Domain.Models;
 using MDator.Samples.WebApi.Features.Products;
 

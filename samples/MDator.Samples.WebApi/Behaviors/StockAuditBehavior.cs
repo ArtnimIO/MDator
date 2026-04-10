@@ -1,4 +1,3 @@
-using MDator;
 using MDator.Samples.WebApi.Features.Stock;
 
 namespace MDator.Samples.WebApi.Behaviors;

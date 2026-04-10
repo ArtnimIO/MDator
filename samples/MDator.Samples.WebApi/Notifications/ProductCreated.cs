@@ -1,5 +1,3 @@
-using MDator;
-
 namespace MDator.Samples.WebApi.Notifications;
 
 public record ProductCreatedNotification(Guid ProductId, string ProductName) : INotification;

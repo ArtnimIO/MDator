@@ -1,4 +1,3 @@
-using MDator;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MDator.Tests;

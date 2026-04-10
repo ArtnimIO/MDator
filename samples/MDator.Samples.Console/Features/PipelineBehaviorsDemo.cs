@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using MDator;
 using MDator.Samples.Domain.Interfaces;
 using MDator.Samples.Domain.Models;
 using MDator.Samples.Console.Infrastructure;

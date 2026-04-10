@@ -1,4 +1,3 @@
-using MDator;
 using MDator.Samples.Domain.Interfaces;
 
 namespace MDator.Samples.WebApi.Features.Products;

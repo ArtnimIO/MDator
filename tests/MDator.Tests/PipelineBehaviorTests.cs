@@ -1,4 +1,3 @@
-using MDator;
 using Microsoft.Extensions.DependencyInjection;
 
 // Declare open-generic behaviors at the assembly level so the MDator generator

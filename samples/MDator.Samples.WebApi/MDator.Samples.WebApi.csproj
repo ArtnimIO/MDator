@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>MDator.Samples.WebApi</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MDator.Samples.Domain\MDator.Samples.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseMDatorSource)' != 'true'">
+    <PackageReference Include="MDator" Version="*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseMDatorSource)' == 'true'">
+    <ProjectReference Include="..\..\src\MDator\MDator.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0-preview.3.25171.1" />
+  </ItemGroup>
+
+</Project>

@@ -5,4 +5,8 @@
     <RootNamespace>MDator.Samples.Domain</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Update="Nerdbank.GitVersioning" Version="3.9.50" />
+  </ItemGroup>
+
 </Project>

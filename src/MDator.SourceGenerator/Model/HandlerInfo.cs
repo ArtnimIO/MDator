@@ -27,4 +27,5 @@ internal sealed record HandlerInfo(
     TypeRef? ResponseType,
     TypeRef? ExceptionType,
     bool HandlerIsOpenGeneric,
-    int ExceptionDepth = 0);
+    int ExceptionDepth = 0,
+    int MessageTypeDepth = 0);

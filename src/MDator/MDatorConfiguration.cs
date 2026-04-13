@@ -54,6 +54,22 @@ public sealed class MDatorConfiguration
     public MDatorConfiguration RegisterServicesFromAssembly(System.Reflection.Assembly assembly) => this;
 
     /// <summary>
+    /// Source-compat marker. Delegates to <see cref="RegisterServicesFromAssembly"/> for each assembly.
+    /// </summary>
+    public MDatorConfiguration RegisterServicesFromAssemblies(params System.Reflection.Assembly[] assemblies)
+    {
+        foreach (var assembly in assemblies)
+            RegisterServicesFromAssembly(assembly);
+        return this;
+    }
+
+    /// <summary>
+    /// Source-compat marker for MediatR v12 migration.
+    /// Open generic handlers are discovered automatically by the source generator.
+    /// </summary>
+    public bool RegisterGenericHandlers { get; set; }
+
+    /// <summary>
     /// Registers a closed behavior at runtime.
     /// </summary>
     public MDatorConfiguration AddBehavior<TImplementation>(ServiceLifetime lifetime = ServiceLifetime.Transient)

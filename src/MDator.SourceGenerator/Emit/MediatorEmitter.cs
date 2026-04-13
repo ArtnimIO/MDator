@@ -15,6 +15,14 @@ namespace MDator.SourceGenerator;
 /// </summary>
 internal static class MediatorEmitter
 {
+    /// <summary>
+    /// Returns handlers sorted so that derived message types come before their
+    /// base types. This prevents CS8120 (unreachable switch case) when a request
+    /// type inherits from another request type.
+    /// </summary>
+    private static List<HandlerInfo> SortedByTypeHierarchy(IEnumerable<HandlerInfo> handlers) =>
+        handlers.OrderByDescending(h => h.MessageTypeDepth).ToList();
+
     public static string Emit(PipelineModel model)
     {
         // Group handlers by kind for easier lookup.
@@ -293,7 +301,7 @@ internal static class MediatorEmitter
         w.OpenBrace();
         w.Line("switch (request)");
         w.OpenBrace();
-        foreach (var h in requestHandlers.Select(kv => kv.Value))
+        foreach (var h in SortedByTypeHierarchy(requestHandlers.Values))
         {
             w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
             w.Indent();
@@ -321,7 +329,7 @@ internal static class MediatorEmitter
         w.OpenBrace();
         w.Line("switch (request)");
         w.OpenBrace();
-        foreach (var h in voidHandlers.Select(kv => kv.Value))
+        foreach (var h in SortedByTypeHierarchy(voidHandlers.Values))
         {
             w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
             w.Indent();
@@ -346,14 +354,14 @@ internal static class MediatorEmitter
         w.OpenBrace();
         w.Line("switch (request)");
         w.OpenBrace();
-        foreach (var h in requestHandlers.Select(kv => kv.Value))
+        foreach (var h in SortedByTypeHierarchy(requestHandlers.Values))
         {
             w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
             w.Indent();
             w.Line($"return await SendCore_{h.MessageType.Identifier}(__req_{h.MessageType.Identifier}, cancellationToken).ConfigureAwait(false);");
             w.Dedent();
         }
-        foreach (var h in voidHandlers.Select(kv => kv.Value))
+        foreach (var h in SortedByTypeHierarchy(voidHandlers.Values))
         {
             w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
             w.Indent();
@@ -375,7 +383,7 @@ internal static class MediatorEmitter
         w.OpenBrace();
         w.Line("switch (request)");
         w.OpenBrace();
-        foreach (var h in streamHandlers.Select(kv => kv.Value))
+        foreach (var h in SortedByTypeHierarchy(streamHandlers.Values))
         {
             w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
             w.Indent();
@@ -408,7 +416,7 @@ internal static class MediatorEmitter
 
         w.Line("public async global::System.Collections.Generic.IAsyncEnumerable<object?> CreateStream(object request, [global::System.Runtime.CompilerServices.EnumeratorCancellation] global::System.Threading.CancellationToken cancellationToken = default)");
         w.OpenBrace();
-        foreach (var h in streamHandlers.Select(kv => kv.Value))
+        foreach (var h in SortedByTypeHierarchy(streamHandlers.Values))
         {
             w.Line($"if (request is {h.MessageType.GlobalName} __req_{h.MessageType.Identifier})");
             w.OpenBrace();

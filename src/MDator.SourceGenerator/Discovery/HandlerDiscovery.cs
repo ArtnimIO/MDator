@@ -27,7 +27,8 @@ internal static class HandlerDiscovery
                     iface.TypeArguments[0].ToTypeRef(),
                     iface.TypeArguments[1].ToTypeRef(),
                     null,
-                    handlerIsOpen);
+                    handlerIsOpen,
+                    MessageTypeDepth: InheritanceDepth(iface.TypeArguments[0]));
             }
             else if (iface.IsMDatorInterface("IRequestHandler`1"))
             {
@@ -37,7 +38,8 @@ internal static class HandlerDiscovery
                     iface.TypeArguments[0].ToTypeRef(),
                     null,
                     null,
-                    handlerIsOpen);
+                    handlerIsOpen,
+                    MessageTypeDepth: InheritanceDepth(iface.TypeArguments[0]));
             }
             else if (iface.IsMDatorInterface("INotificationHandler`1"))
             {
@@ -47,7 +49,8 @@ internal static class HandlerDiscovery
                     iface.TypeArguments[0].ToTypeRef(),
                     null,
                     null,
-                    handlerIsOpen);
+                    handlerIsOpen,
+                    MessageTypeDepth: InheritanceDepth(iface.TypeArguments[0]));
             }
             else if (iface.IsMDatorInterface("IStreamRequestHandler`2"))
             {
@@ -57,7 +60,8 @@ internal static class HandlerDiscovery
                     iface.TypeArguments[0].ToTypeRef(),
                     iface.TypeArguments[1].ToTypeRef(),
                     null,
-                    handlerIsOpen);
+                    handlerIsOpen,
+                    MessageTypeDepth: InheritanceDepth(iface.TypeArguments[0]));
             }
             else if (iface.IsMDatorInterface("IRequestPreProcessor`1"))
             {

@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseMDatorSource)' != 'true'">
-    <PackageReference Include="MDator" Version="0.2.4" />
+    <PackageReference Include="MDator" Version="0.2.13" />
     <PackageReference Update="Nerdbank.GitVersioning" Version="3.9.50" />
   </ItemGroup>
   <ItemGroup Condition="'$(UseMDatorSource)' == 'true'">

@@ -6,6 +6,8 @@
     <PackageId>MDator</PackageId>
     <AssemblyName>MDator</AssemblyName>
     <Description>A source-generated, MediatR-compatible mediator for .NET. Replaces MediatR's runtime reflection with compile-time dispatch, pipeline fusion, and zero-reflection handler registration.</Description>
+    <RepositoryUrl>https://github.com/ArtnimIO/MDator</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
 
     <!-- Ensure consumers of the nupkg get the source generator activated automatically. -->
     <DevelopmentDependency>false</DevelopmentDependency>

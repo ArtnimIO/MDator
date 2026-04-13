@@ -8,6 +8,8 @@
     <PackageId>MDator.Abstractions</PackageId>
     <AssemblyName>MDator.Abstractions</AssemblyName>
     <Description>Interfaces and abstractions for MDator, a source-generated MediatR-compatible mediator. Reference this package from handler libraries that don't need the source generator or DI integration.</Description>
+    <RepositoryUrl>https://github.com/ArtnimIO/MDator</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <PolySharpIncludeRuntimeSupportedAttributes>true</PolySharpIncludeRuntimeSupportedAttributes>
   </PropertyGroup>
 

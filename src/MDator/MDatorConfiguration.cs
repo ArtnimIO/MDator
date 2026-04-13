@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MDator;
@@ -68,6 +69,25 @@ public sealed class MDatorConfiguration
     /// Open generic handlers are discovered automatically by the source generator.
     /// </summary>
     public bool RegisterGenericHandlers { get; set; }
+
+    /// <summary>
+    /// Open behavior types registered by the source generator's <c>[ModuleInitializer]</c>.
+    /// Used by <see cref="RuntimeDispatch"/> to chain open behaviors in the DI fallback
+    /// path (cross-assembly handler dispatch).
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public List<(Type Type, int Order)> OpenBehaviorTypes { get; } = new();
+
+    /// <summary>
+    /// Called from generated registration code to record an open behavior type
+    /// so the runtime fallback path can resolve it.
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public void RegisterOpenBehavior(Type type, int order)
+    {
+        if (OpenBehaviorTypes.All(x => x.Type != type))
+            OpenBehaviorTypes.Add((type, order));
+    }
 
     /// <summary>
     /// Registers a closed behavior at runtime.

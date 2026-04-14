@@ -214,7 +214,6 @@ public static class RuntimeDispatch
         IServiceProvider sp, MDatorConfiguration cfg,
         TRequest request, CancellationToken ct,
         RequestHandlerDelegate<TResponse> next)
-        where TRequest : notnull
     {
         // Open behaviors registered via [assembly: OpenBehavior(...)].
         // Reversed so that declared-earlier (lower Order) = outermost, matching
@@ -254,7 +253,6 @@ public static class RuntimeDispatch
         IServiceProvider sp, MDatorConfiguration cfg,
         TRequest request, CancellationToken ct,
         RequestHandlerDelegate<Unit> next)
-        where TRequest : notnull
     {
         foreach (var (openType, _) in cfg.OpenBehaviorTypes.OrderBy(x => x.Order).Reverse())
         {

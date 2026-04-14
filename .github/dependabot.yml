@@ -4,6 +4,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "MDator"
+        # Samples reference the published MDator package for demo purposes.
+        # Dependabot bumping it creates an infinite loop: merge → new version
+        # published → Dependabot opens another bump PR → merge → repeat.
 
   - package-ecosystem: "github-actions"
     directory: "/"

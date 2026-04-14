@@ -6,9 +6,18 @@ namespace MDator.SourceGenerator;
 
 internal static class SymbolExtensions
 {
+    /// <summary>
+    /// Like <see cref="SymbolDisplayFormat.FullyQualifiedFormat"/> but preserves
+    /// the <c>?</c> suffix on nullable reference types so the generated code
+    /// matches the original nullability annotations (avoids CS8631).
+    /// </summary>
+    private static readonly SymbolDisplayFormat NullableFullyQualifiedFormat =
+        SymbolDisplayFormat.FullyQualifiedFormat.AddMiscellaneousOptions(
+            SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
+
     public static TypeRef ToTypeRef(this ITypeSymbol symbol)
     {
-        var globalName = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        var globalName = symbol.ToDisplayString(NullableFullyQualifiedFormat);
         var simpleName = symbol.ToDisplayString(new SymbolDisplayFormat(
             typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameOnly,
             genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters));

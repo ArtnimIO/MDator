@@ -14,10 +14,16 @@
          checks since we can't reference MDator.Abstractions from an analyzer. -->
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1574;CS1591</NoWarn>
+
+    <!-- Default to latest Roslyn version for IDE / local builds.
+         The Nuke build overrides this per-version during packing. -->
+    <ROSLYN_VERSION Condition="'$(ROSLYN_VERSION)' == ''">5.0</ROSLYN_VERSION>
   </PropertyGroup>
 
+  <!-- Version-specific Microsoft.CodeAnalysis.CSharp reference -->
+  <Import Project="MDator.SourceGenerator.Roslyn$(ROSLYN_VERSION).props" />
+
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.3.0" PrivateAssets="all" />
     <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
     <PackageReference Update="Nerdbank.GitVersioning" Version="3.9.50" />

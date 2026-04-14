@@ -27,7 +27,6 @@ public sealed class RequestExceptionHandlerState<TResponse>
 /// time — most-derived first.
 /// </summary>
 public interface IRequestExceptionHandler<in TRequest, TResponse, in TException>
-    where TRequest : notnull
     where TException : Exception
 {
     Task Handle(
@@ -44,7 +43,6 @@ public interface IRequestExceptionHandler<in TRequest, TResponse, in TException>
 /// the exception handled.
 /// </summary>
 public interface IRequestExceptionAction<in TRequest, in TException>
-    where TRequest : notnull
     where TException : Exception
 {
     Task Execute(TRequest request, TException exception, CancellationToken cancellationToken);

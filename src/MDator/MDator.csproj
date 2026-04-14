@@ -12,6 +12,10 @@
     <!-- Ensure consumers of the nupkg get the source generator activated automatically. -->
     <DevelopmentDependency>false</DevelopmentDependency>
     <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
+
+    <!-- Roslyn version for multi-targeted analyzer packaging.
+         The Nuke build overrides this per-version during packing. -->
+    <ROSLYN_VERSION Condition="'$(ROSLYN_VERSION)' == ''">5.0</ROSLYN_VERSION>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,10 +32,12 @@
                       ReferenceOutputAssembly="false"
                       OutputItemType="Analyzer" />
 
-    <!-- Bundle the generator DLL into the nupkg so consumers get it automatically. -->
+    <!-- Bundle the generator DLL into the nupkg so consumers get it automatically.
+         The Nuke build sets ROSLYN_VERSION per iteration to place each build in
+         analyzers/roslyn<ver>/dotnet/cs so the SDK picks the right one. -->
     <None Include="..\MDator.SourceGenerator\bin\$(Configuration)\netstandard2.0\MDator.SourceGenerator.dll"
           Pack="true"
-          PackagePath="analyzers/dotnet/cs"
+          PackagePath="analyzers/roslyn$(ROSLYN_VERSION)/dotnet/cs"
           Visible="false" />
   </ItemGroup>
 

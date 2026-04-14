@@ -14,7 +14,6 @@ public delegate Task<TResponse> RequestHandlerDelegate<TResponse>();
 /// caching, transactions, etc.) to be composed around it.
 /// </summary>
 public interface IPipelineBehavior<in TRequest, TResponse>
-    where TRequest : notnull
 {
     Task<TResponse> Handle(
         TRequest request,

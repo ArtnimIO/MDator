@@ -56,3 +56,24 @@ jobs:
         run: ./build.sh Publish --nuget-api-key "$NUGET_APIKEY"
         env:
           NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
+
+  publish-prerelease:
+    needs: build-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    environment: nuget-prerelease
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v8
+        with:
+          name: nuget-packages
+          path: output
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Push prerelease to NuGet
+        run: dotnet nuget push "output/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_APIKEY" --skip-duplicate
+        env:
+          NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}

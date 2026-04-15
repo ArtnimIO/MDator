@@ -23,6 +23,26 @@ internal static class MediatorEmitter
     private static List<HandlerInfo> SortedByTypeHierarchy(IEnumerable<HandlerInfo> handlers) =>
         handlers.OrderByDescending(h => h.MessageTypeDepth).ToList();
 
+    /// <summary>
+    /// Builds a combined, type-hierarchy-sorted list of switch entries from both
+    /// same-assembly handlers and cross-assembly request infos. Derived types come
+    /// first to prevent CS8120 (unreachable switch case).
+    /// </summary>
+    private static List<(TypeRef MessageType, TypeRef? ResponseType, bool IsCrossAssembly)> CombinedSwitchEntries(
+        IEnumerable<HandlerInfo> sameAssembly,
+        List<CrossAssemblyRequestInfo> crossAssembly)
+    {
+        var entries = new List<(TypeRef MessageType, TypeRef? ResponseType, bool IsCrossAssembly, int Depth)>();
+        foreach (var h in sameAssembly)
+            entries.Add((h.MessageType, h.ResponseType, false, h.MessageTypeDepth));
+        foreach (var x in crossAssembly)
+            entries.Add((x.MessageType, x.ResponseType, true, x.MessageTypeDepth));
+        return entries
+            .OrderByDescending(e => e.Depth)
+            .Select(e => (e.MessageType, e.ResponseType, e.IsCrossAssembly))
+            .ToList();
+    }
+
     public static string Emit(PipelineModel model)
     {
         // Group handlers by kind for easier lookup.
@@ -80,8 +100,30 @@ internal static class MediatorEmitter
             .OrderBy(b => b.Order).ThenBy(b => b.BehaviorType.GlobalName)
             .ToList();
 
+        // Cross-assembly requests: filter out any already handled same-assembly,
+        // then split by kind.
+        var sameAssemblyKeys = new HashSet<string>(
+            requestHandlers.Keys
+                .Concat(voidHandlers.Keys)
+                .Concat(streamHandlers.Keys)
+                .Concat(notificationHandlers.Keys));
+
+        var xasmRequests = model.CrossAssemblyRequests
+            .Where(x => !sameAssemblyKeys.Contains(x.MessageType.GlobalName))
+            .ToList();
+
+        var xasmRequestWithResp = xasmRequests
+            .Where(x => x.Kind == HandlerKind.RequestWithResponse).ToList();
+        var xasmVoid = xasmRequests
+            .Where(x => x.Kind == HandlerKind.RequestVoid).ToList();
+        var xasmStream = xasmRequests
+            .Where(x => x.Kind == HandlerKind.Stream).ToList();
+        var xasmNotification = xasmRequests
+            .Where(x => x.Kind == HandlerKind.Notification).ToList();
+
         var w = new CodeWriter();
         EmitHeader(w);
+        EmitKnownRequestAttributes(w, model.Handlers);
         EmitNamespaceOpen(w, model.RootNamespace);
 
         EmitRegistration(w, model, requestHandlers, voidHandlers, streamHandlers,
@@ -93,7 +135,8 @@ internal static class MediatorEmitter
         EmitMediator(w, requestHandlers, voidHandlers, streamHandlers,
             notificationHandlers, preProcessors, postProcessors,
             exceptionHandlers, exceptionActions,
-            openRequestBehaviors, openStreamBehaviors);
+            openRequestBehaviors, openStreamBehaviors,
+            xasmRequestWithResp, xasmVoid, xasmStream, xasmNotification);
 
         EmitNamespaceClose(w);
         return w.ToString();
@@ -113,6 +156,27 @@ internal static class MediatorEmitter
         w.Line("using Microsoft.Extensions.DependencyInjection;");
         w.Line("using MDator;");
         w.Line();
+    }
+
+    /// <summary>
+    /// Emits <c>[assembly: KnownRequest(typeof(...))]</c> for every unique message
+    /// type in this assembly so that downstream consuming assemblies can include
+    /// them in their compile-time dispatch switches.
+    /// </summary>
+    private static void EmitKnownRequestAttributes(CodeWriter w, EquatableArray<HandlerInfo> handlers)
+    {
+        var seen = new HashSet<string>();
+        foreach (var h in handlers)
+        {
+            // Only primary handler kinds — processors/exception handlers don't
+            // define new dispatchable message types.
+            if (h.Kind is not (HandlerKind.RequestWithResponse or HandlerKind.RequestVoid
+                or HandlerKind.Stream or HandlerKind.Notification)) continue;
+            if (h.HandlerIsOpenGeneric) continue; // typeof() can't reference open generics
+            if (!seen.Add(h.MessageType.GlobalName)) continue;
+            w.Line($"[assembly: global::MDator.KnownRequestAttribute(typeof({h.MessageType.GlobalName}))]");
+        }
+        if (seen.Count > 0) w.Line();
     }
 
     private static string NsIdentifier(string rootNamespace)
@@ -249,7 +313,11 @@ internal static class MediatorEmitter
         Dictionary<(string, string), List<HandlerInfo>> exceptionHandlers,
         Dictionary<string, List<HandlerInfo>> exceptionActions,
         List<BehaviorInfo> openRequestBehaviors,
-        List<BehaviorInfo> openStreamBehaviors)
+        List<BehaviorInfo> openStreamBehaviors,
+        List<CrossAssemblyRequestInfo> xasmRequestWithResp,
+        List<CrossAssemblyRequestInfo> xasmVoid,
+        List<CrossAssemblyRequestInfo> xasmStream,
+        List<CrossAssemblyRequestInfo> xasmNotification)
     {
         w.Line("internal sealed class GeneratedMediator : global::MDator.IMediator");
         w.OpenBrace();
@@ -265,15 +333,15 @@ internal static class MediatorEmitter
         w.CloseBrace();
         w.Line();
 
-        EmitSendWithResponse(w, requestHandlers);
-        EmitSendVoid(w, voidHandlers);
-        EmitSendObject(w, requestHandlers, voidHandlers);
-        EmitCreateStream(w, streamHandlers);
-        EmitCreateStreamObject(w, streamHandlers);
-        EmitPublish(w, notificationHandlers);
-        EmitPublishObject(w, notificationHandlers);
+        EmitSendWithResponse(w, requestHandlers, xasmRequestWithResp);
+        EmitSendVoid(w, voidHandlers, xasmVoid);
+        EmitSendObject(w, requestHandlers, voidHandlers, xasmRequestWithResp, xasmVoid);
+        EmitCreateStream(w, streamHandlers, xasmStream);
+        EmitCreateStreamObject(w, streamHandlers, xasmStream);
+        EmitPublish(w, notificationHandlers, xasmNotification);
+        EmitPublishObject(w, notificationHandlers, xasmNotification);
 
-        // Per-request pipeline composers
+        // Per-request pipeline composers — same-assembly
         foreach (var kv in requestHandlers)
         {
             EmitRequestPipeline(w, kv.Value, preProcessors, postProcessors,
@@ -292,20 +360,38 @@ internal static class MediatorEmitter
             EmitNotificationPublish(w, kv.Key, kv.Value);
         }
 
+        // Per-request pipeline composers — cross-assembly
+        foreach (var x in xasmRequestWithResp)
+        {
+            EmitCrossAssemblyRequestPipeline(w, x.MessageType, x.ResponseType!, openRequestBehaviors);
+        }
+        foreach (var x in xasmVoid)
+        {
+            EmitCrossAssemblyVoidPipeline(w, x.MessageType, openRequestBehaviors);
+        }
+        foreach (var x in xasmStream)
+        {
+            EmitCrossAssemblyStreamPipeline(w, x.MessageType, x.ResponseType!, openStreamBehaviors);
+        }
+        foreach (var x in xasmNotification)
+        {
+            EmitCrossAssemblyNotificationPublish(w, x.MessageType);
+        }
+
         w.CloseBrace();
     }
 
-    private static void EmitSendWithResponse(CodeWriter w, Dictionary<string, HandlerInfo> requestHandlers)
+    private static void EmitSendWithResponse(CodeWriter w, Dictionary<string, HandlerInfo> requestHandlers, List<CrossAssemblyRequestInfo> xasm)
     {
         w.Line("public global::System.Threading.Tasks.Task<TResponse> Send<TResponse>(global::MDator.IRequest<TResponse> request, global::System.Threading.CancellationToken cancellationToken = default)");
         w.OpenBrace();
         w.Line("switch (request)");
         w.OpenBrace();
-        foreach (var h in SortedByTypeHierarchy(requestHandlers.Values))
+        foreach (var (msg, _, _) in CombinedSwitchEntries(requestHandlers.Values, xasm))
         {
-            w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
+            w.Line($"case {msg.GlobalName} __req_{msg.Identifier}:");
             w.Indent();
-            w.Line($"return (global::System.Threading.Tasks.Task<TResponse>)(object)SendCore_{h.MessageType.Identifier}(__req_{h.MessageType.Identifier}, cancellationToken);");
+            w.Line($"return (global::System.Threading.Tasks.Task<TResponse>)(object)SendCore_{msg.Identifier}(__req_{msg.Identifier}, cancellationToken);");
             w.Dedent();
         }
         w.Line("default:");
@@ -323,17 +409,17 @@ internal static class MediatorEmitter
         w.Line();
     }
 
-    private static void EmitSendVoid(CodeWriter w, Dictionary<string, HandlerInfo> voidHandlers)
+    private static void EmitSendVoid(CodeWriter w, Dictionary<string, HandlerInfo> voidHandlers, List<CrossAssemblyRequestInfo> xasm)
     {
         w.Line("public global::System.Threading.Tasks.Task Send<TRequest>(TRequest request, global::System.Threading.CancellationToken cancellationToken = default) where TRequest : global::MDator.IRequest");
         w.OpenBrace();
         w.Line("switch (request)");
         w.OpenBrace();
-        foreach (var h in SortedByTypeHierarchy(voidHandlers.Values))
+        foreach (var (msg, _, _) in CombinedSwitchEntries(voidHandlers.Values, xasm))
         {
-            w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
+            w.Line($"case {msg.GlobalName} __req_{msg.Identifier}:");
             w.Indent();
-            w.Line($"return SendVoidCore_{h.MessageType.Identifier}(__req_{h.MessageType.Identifier}, cancellationToken);");
+            w.Line($"return SendVoidCore_{msg.Identifier}(__req_{msg.Identifier}, cancellationToken);");
             w.Dedent();
         }
         w.Line("default:");
@@ -348,24 +434,26 @@ internal static class MediatorEmitter
     private static void EmitSendObject(
         CodeWriter w,
         Dictionary<string, HandlerInfo> requestHandlers,
-        Dictionary<string, HandlerInfo> voidHandlers)
+        Dictionary<string, HandlerInfo> voidHandlers,
+        List<CrossAssemblyRequestInfo> xasmReq,
+        List<CrossAssemblyRequestInfo> xasmVoid)
     {
         w.Line("public async global::System.Threading.Tasks.Task<object?> Send(object request, global::System.Threading.CancellationToken cancellationToken = default)");
         w.OpenBrace();
         w.Line("switch (request)");
         w.OpenBrace();
-        foreach (var h in SortedByTypeHierarchy(requestHandlers.Values))
+        foreach (var (msg, _, _) in CombinedSwitchEntries(requestHandlers.Values, xasmReq))
         {
-            w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
+            w.Line($"case {msg.GlobalName} __req_{msg.Identifier}:");
             w.Indent();
-            w.Line($"return await SendCore_{h.MessageType.Identifier}(__req_{h.MessageType.Identifier}, cancellationToken).ConfigureAwait(false);");
+            w.Line($"return await SendCore_{msg.Identifier}(__req_{msg.Identifier}, cancellationToken).ConfigureAwait(false);");
             w.Dedent();
         }
-        foreach (var h in SortedByTypeHierarchy(voidHandlers.Values))
+        foreach (var (msg, _, _) in CombinedSwitchEntries(voidHandlers.Values, xasmVoid))
         {
-            w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
+            w.Line($"case {msg.GlobalName} __req_{msg.Identifier}:");
             w.Indent();
-            w.Line($"await SendVoidCore_{h.MessageType.Identifier}(__req_{h.MessageType.Identifier}, cancellationToken).ConfigureAwait(false); return null;");
+            w.Line($"await SendVoidCore_{msg.Identifier}(__req_{msg.Identifier}, cancellationToken).ConfigureAwait(false); return null;");
             w.Dedent();
         }
         w.Line("default:");
@@ -377,17 +465,17 @@ internal static class MediatorEmitter
         w.Line();
     }
 
-    private static void EmitCreateStream(CodeWriter w, Dictionary<string, HandlerInfo> streamHandlers)
+    private static void EmitCreateStream(CodeWriter w, Dictionary<string, HandlerInfo> streamHandlers, List<CrossAssemblyRequestInfo> xasm)
     {
         w.Line("public global::System.Collections.Generic.IAsyncEnumerable<TResponse> CreateStream<TResponse>(global::MDator.IStreamRequest<TResponse> request, global::System.Threading.CancellationToken cancellationToken = default)");
         w.OpenBrace();
         w.Line("switch (request)");
         w.OpenBrace();
-        foreach (var h in SortedByTypeHierarchy(streamHandlers.Values))
+        foreach (var (msg, _, _) in CombinedSwitchEntries(streamHandlers.Values, xasm))
         {
-            w.Line($"case {h.MessageType.GlobalName} __req_{h.MessageType.Identifier}:");
+            w.Line($"case {msg.GlobalName} __req_{msg.Identifier}:");
             w.Indent();
-            w.Line($"return (global::System.Collections.Generic.IAsyncEnumerable<TResponse>)(object)StreamCore_{h.MessageType.Identifier}(__req_{h.MessageType.Identifier}, cancellationToken);");
+            w.Line($"return (global::System.Collections.Generic.IAsyncEnumerable<TResponse>)(object)StreamCore_{msg.Identifier}(__req_{msg.Identifier}, cancellationToken);");
             w.Dedent();
         }
         w.Line("default:");
@@ -399,12 +487,13 @@ internal static class MediatorEmitter
         w.Line();
     }
 
-    private static void EmitCreateStreamObject(CodeWriter w, Dictionary<string, HandlerInfo> streamHandlers)
+    private static void EmitCreateStreamObject(CodeWriter w, Dictionary<string, HandlerInfo> streamHandlers, List<CrossAssemblyRequestInfo> xasm)
     {
-        // When there are no stream handlers at all in this assembly, delegate
-        // entirely to the runtime fallback (which resolves cross-assembly handlers
-        // from DI). No async/yield needed — just return the fallback enumerable.
-        if (streamHandlers.Count == 0)
+        var allEntries = CombinedSwitchEntries(streamHandlers.Values, xasm);
+
+        // When there are no stream handlers at all, delegate entirely to the
+        // runtime fallback. No async/yield needed — just return the fallback.
+        if (allEntries.Count == 0)
         {
             w.Line("public global::System.Collections.Generic.IAsyncEnumerable<object?> CreateStream(object request, global::System.Threading.CancellationToken cancellationToken = default)");
             w.OpenBrace();
@@ -416,18 +505,18 @@ internal static class MediatorEmitter
 
         w.Line("public async global::System.Collections.Generic.IAsyncEnumerable<object?> CreateStream(object request, [global::System.Runtime.CompilerServices.EnumeratorCancellation] global::System.Threading.CancellationToken cancellationToken = default)");
         w.OpenBrace();
-        foreach (var h in SortedByTypeHierarchy(streamHandlers.Values))
+        foreach (var (msg, _, _) in allEntries)
         {
-            w.Line($"if (request is {h.MessageType.GlobalName} __req_{h.MessageType.Identifier})");
+            w.Line($"if (request is {msg.GlobalName} __req_{msg.Identifier})");
             w.OpenBrace();
-            w.Line($"await foreach (var __item in StreamCore_{h.MessageType.Identifier}(__req_{h.MessageType.Identifier}, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))");
+            w.Line($"await foreach (var __item in StreamCore_{msg.Identifier}(__req_{msg.Identifier}, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))");
             w.OpenBrace();
             w.Line("yield return __item;");
             w.CloseBrace();
             w.Line("yield break;");
             w.CloseBrace();
         }
-        // Fallback: resolve cross-assembly stream handlers from DI.
+        // Fallback: resolve truly unknown stream handlers from DI.
         w.Line("await foreach (var __item in global::MDator.RuntimeDispatch.StreamObjectFallback(_sp, _cfg, request, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))");
         w.OpenBrace();
         w.Line("yield return __item;");
@@ -436,7 +525,7 @@ internal static class MediatorEmitter
         w.Line();
     }
 
-    private static void EmitPublish(CodeWriter w, Dictionary<string, List<HandlerInfo>> notificationHandlers)
+    private static void EmitPublish(CodeWriter w, Dictionary<string, List<HandlerInfo>> notificationHandlers, List<CrossAssemblyRequestInfo> xasm)
     {
         w.Line("public global::System.Threading.Tasks.Task Publish<TNotification>(TNotification notification, global::System.Threading.CancellationToken cancellationToken = default) where TNotification : global::MDator.INotification");
         w.OpenBrace();
@@ -449,6 +538,13 @@ internal static class MediatorEmitter
             w.Line($"return PublishCore_{first.MessageType.Identifier}(__n_{first.MessageType.Identifier}, cancellationToken);");
             w.Dedent();
         }
+        foreach (var x in xasm)
+        {
+            w.Line($"case {x.MessageType.GlobalName} __n_{x.MessageType.Identifier}:");
+            w.Indent();
+            w.Line($"return PublishCore_{x.MessageType.Identifier}(__n_{x.MessageType.Identifier}, cancellationToken);");
+            w.Dedent();
+        }
         w.Line("default:");
         w.Indent();
         w.Line("return global::System.Threading.Tasks.Task.CompletedTask;");
@@ -458,7 +554,7 @@ internal static class MediatorEmitter
         w.Line();
     }
 
-    private static void EmitPublishObject(CodeWriter w, Dictionary<string, List<HandlerInfo>> notificationHandlers)
+    private static void EmitPublishObject(CodeWriter w, Dictionary<string, List<HandlerInfo>> notificationHandlers, List<CrossAssemblyRequestInfo> xasm)
     {
         w.Line("public global::System.Threading.Tasks.Task Publish(object notification, global::System.Threading.CancellationToken cancellationToken = default)");
         w.OpenBrace();
@@ -471,6 +567,13 @@ internal static class MediatorEmitter
             w.Line($"case {first.MessageType.GlobalName} __n_{first.MessageType.Identifier}:");
             w.Indent();
             w.Line($"return PublishCore_{first.MessageType.Identifier}(__n_{first.MessageType.Identifier}, cancellationToken);");
+            w.Dedent();
+        }
+        foreach (var x in xasm)
+        {
+            w.Line($"case {x.MessageType.GlobalName} __n_{x.MessageType.Identifier}:");
+            w.Indent();
+            w.Line($"return PublishCore_{x.MessageType.Identifier}(__n_{x.MessageType.Identifier}, cancellationToken);");
             w.Dedent();
         }
         w.Line("default:");
@@ -714,6 +817,159 @@ internal static class MediatorEmitter
         w.Line($"__list.Add(new global::MDator.NotificationHandlerExecutor(__hCapture, (__msg, __ct) => __hCapture.Handle(({nT})__msg, __ct)));");
         w.CloseBrace();
         w.Line("return _publisher.Publish(__list, notification, ct);");
+        w.CloseBrace();
+        w.Line();
+    }
+
+    // ── Cross-assembly pipeline emitters ────────────────────────────────
+    //
+    // These generate pipelines for request types discovered via
+    // [assembly: KnownRequest(...)] on referenced assemblies. They differ
+    // from same-assembly pipelines in that:
+    //  • The handler is always resolved by interface type (concrete is unknown).
+    //  • Pre/post processors are always resolved from DI (we don't know which exist).
+    //  • No exception handler/action blocks (those are assembly-local).
+
+    private static void EmitCrossAssemblyRequestPipeline(
+        CodeWriter w, TypeRef req, TypeRef resp,
+        List<BehaviorInfo> openRequestBehaviors)
+    {
+        var reqT = req.GlobalName;
+        var respT = resp.GlobalName;
+
+        w.Line($"private async global::System.Threading.Tasks.Task<{respT}> SendCore_{req.Identifier}({reqT} request, global::System.Threading.CancellationToken ct)");
+        w.OpenBrace();
+        w.Line($"var handler = _sp.GetRequiredService<global::MDator.IRequestHandler<{reqT}, {respT}>>();");
+        w.Line($"var __pre = _sp.GetServices<global::MDator.IRequestPreProcessor<{reqT}>>();");
+        w.Line($"var __post = _sp.GetServices<global::MDator.IRequestPostProcessor<{reqT}, {respT}>>();");
+        w.Line();
+
+        w.Line($"global::MDator.RequestHandlerDelegate<{respT}> next = async () =>");
+        w.OpenBrace();
+        w.Line("foreach (var __p in __pre) await __p.Process(request, ct).ConfigureAwait(false);");
+        w.Line("var __resp = await handler.Handle(request, ct).ConfigureAwait(false);");
+        w.Line("foreach (var __p in __post) await __p.Process(request, __resp, ct).ConfigureAwait(false);");
+        w.Line("return __resp;");
+        w.CloseBraceWithSemicolon();
+        w.Line();
+
+        EmitFusedOpenBehaviors(w, openRequestBehaviors, reqT, respT);
+        EmitRuntimeBehaviorEnumeration(w, reqT, respT);
+
+        w.Line("return await next().ConfigureAwait(false);");
+        w.CloseBrace();
+        w.Line();
+    }
+
+    private static void EmitCrossAssemblyVoidPipeline(
+        CodeWriter w, TypeRef req,
+        List<BehaviorInfo> openRequestBehaviors)
+    {
+        var reqT = req.GlobalName;
+
+        w.Line($"private async global::System.Threading.Tasks.Task SendVoidCore_{req.Identifier}({reqT} request, global::System.Threading.CancellationToken ct)");
+        w.OpenBrace();
+        w.Line($"var handler = _sp.GetRequiredService<global::MDator.IRequestHandler<{reqT}>>();");
+        w.Line($"var __pre = _sp.GetServices<global::MDator.IRequestPreProcessor<{reqT}>>();");
+        w.Line();
+
+        w.Line("global::MDator.RequestHandlerDelegate<global::MDator.Unit> next = async () =>");
+        w.OpenBrace();
+        w.Line("foreach (var __p in __pre) await __p.Process(request, ct).ConfigureAwait(false);");
+        w.Line("await handler.Handle(request, ct).ConfigureAwait(false);");
+        w.Line("return global::MDator.Unit.Value;");
+        w.CloseBraceWithSemicolon();
+        w.Line();
+
+        EmitFusedOpenBehaviors(w, openRequestBehaviors, reqT, "global::MDator.Unit");
+        EmitRuntimeBehaviorEnumeration(w, reqT, "global::MDator.Unit");
+
+        w.Line("await next().ConfigureAwait(false);");
+        w.CloseBrace();
+        w.Line();
+    }
+
+    private static void EmitCrossAssemblyStreamPipeline(
+        CodeWriter w, TypeRef req, TypeRef resp,
+        List<BehaviorInfo> openStreamBehaviors)
+    {
+        var reqT = req.GlobalName;
+        var respT = resp.GlobalName;
+
+        w.Line($"private global::System.Collections.Generic.IAsyncEnumerable<{respT}> StreamCore_{req.Identifier}({reqT} request, global::System.Threading.CancellationToken ct)");
+        w.OpenBrace();
+        w.Line($"var handler = _sp.GetRequiredService<global::MDator.IStreamRequestHandler<{reqT}, {respT}>>();");
+        w.Line($"global::MDator.StreamHandlerDelegate<{respT}> next = () => handler.Handle(request, ct);");
+
+        if (openStreamBehaviors.Count > 0)
+        {
+            var i = 0;
+            foreach (var b in ((IEnumerable<BehaviorInfo>)openStreamBehaviors).Reverse())
+            {
+                var bType = b.BehaviorType.GlobalNameWithoutGenerics;
+                w.Line($"var __sb_{i} = _sp.GetRequiredService<{bType}<{reqT}, {respT}>>();");
+                w.Line("{ var __prev = next; next = () => __sb_" + i + ".Handle(request, __prev, ct); }");
+                i++;
+            }
+        }
+        w.Line("if (!_cfg.FuseOnly)");
+        w.OpenBrace();
+        w.Line($"foreach (var __rb in _sp.GetServices<global::MDator.IStreamPipelineBehavior<{reqT}, {respT}>>())");
+        w.OpenBrace();
+        w.Line("{ var __prev2 = next; next = () => __rb.Handle(request, __prev2, ct); }");
+        w.CloseBrace();
+        w.CloseBrace();
+
+        w.Line("return next();");
+        w.CloseBrace();
+        w.Line();
+    }
+
+    private static void EmitCrossAssemblyNotificationPublish(CodeWriter w, TypeRef notification)
+    {
+        var nT = notification.GlobalName;
+
+        w.Line($"private global::System.Threading.Tasks.Task PublishCore_{notification.Identifier}({nT} notification, global::System.Threading.CancellationToken ct)");
+        w.OpenBrace();
+        w.Line($"var __all = _sp.GetServices<global::MDator.INotificationHandler<{nT}>>();");
+        w.Line("var __list = new global::System.Collections.Generic.List<global::MDator.NotificationHandlerExecutor>();");
+        w.Line("foreach (var __h in __all)");
+        w.OpenBrace();
+        w.Line($"var __hCapture = __h;");
+        w.Line($"__list.Add(new global::MDator.NotificationHandlerExecutor(__hCapture, (__msg, __ct) => __hCapture.Handle(({nT})__msg, __ct)));");
+        w.CloseBrace();
+        w.Line("return _publisher.Publish(__list, notification, ct);");
+        w.CloseBrace();
+        w.Line();
+    }
+
+    // ── Shared helpers for cross-assembly pipeline emission ─────────────
+
+    private static void EmitFusedOpenBehaviors(
+        CodeWriter w, List<BehaviorInfo> openBehaviors,
+        string reqT, string respT)
+    {
+        if (openBehaviors.Count == 0) return;
+        var i = 0;
+        foreach (var b in ((IEnumerable<BehaviorInfo>)openBehaviors).Reverse())
+        {
+            var bType = b.BehaviorType.GlobalNameWithoutGenerics;
+            w.Line($"var __b_{i} = _sp.GetRequiredService<{bType}<{reqT}, {respT}>>();");
+            w.Line("{ var __prev = next; next = () => __b_" + i + ".Handle(request, __prev, ct); }");
+            i++;
+        }
+        w.Line();
+    }
+
+    private static void EmitRuntimeBehaviorEnumeration(
+        CodeWriter w, string reqT, string respT)
+    {
+        w.Line("if (!_cfg.FuseOnly)");
+        w.OpenBrace();
+        w.Line($"foreach (var __rb in _sp.GetServices<global::MDator.IPipelineBehavior<{reqT}, {respT}>>())");
+        w.OpenBrace();
+        w.Line("{ var __prev2 = next; next = () => __rb.Handle(request, __prev2, ct); }");
+        w.CloseBrace();
         w.CloseBrace();
         w.Line();
     }

@@ -41,21 +41,27 @@ public sealed class MDatorIncrementalGenerator : IIncrementalGenerator
         var assemblyName = context.CompilationProvider
             .Select(static (c, _) => c.AssemblyName ?? "GeneratedMDator");
 
+        // Cross-assembly requests: read [assembly: KnownRequest(typeof(...))]
+        // from directly referenced assemblies.
+        var crossAssemblyRequests = context.CompilationProvider
+            .Select(static (c, ct) => ExtractCrossAssemblyRequests(c, ct));
+
         var combined = handlers
             .Combine(closedBehaviors)
             .Combine(openBehaviors)
+            .Combine(crossAssemblyRequests)
             .Combine(assemblyName)
             .Select(static (t, _) =>
             {
-                var ((hAndCb, open), asm) = t;
+                var (((hAndCb, open), xasm), asm) = t;
                 var (h, cb) = hAndCb;
                 var all = cb.Concat(open).ToArray();
-                return new PipelineModel(asm, h, new EquatableArray<BehaviorInfo>(all));
+                return new PipelineModel(asm, h, new EquatableArray<BehaviorInfo>(all), xasm);
             });
 
         context.RegisterSourceOutput(combined, static (spc, model) =>
         {
-            if (model.Handlers.Count == 0) return; // nothing to do — consumer hasn't declared any handlers yet.
+            if (model.Handlers.Count == 0 && model.CrossAssemblyRequests.Count == 0) return;
             var code = MediatorEmitter.Emit(model);
             spc.AddSource("MDatorGenerated.g.cs", code);
         });
@@ -77,6 +83,99 @@ public sealed class MDatorIncrementalGenerator : IIncrementalGenerator
         var list = new List<BehaviorInfo>();
         foreach (var info in BehaviorDiscovery.ClassifyClosed(symbol)) list.Add(info);
         return list;
+    }
+
+    private static EquatableArray<CrossAssemblyRequestInfo> ExtractCrossAssemblyRequests(Compilation compilation, CancellationToken ct)
+    {
+        var knownRequestAttr = compilation.GetTypeByMetadataName("MDator.KnownRequestAttribute");
+        if (knownRequestAttr is null) return EquatableArray<CrossAssemblyRequestInfo>.Empty;
+
+        var seen = new HashSet<string>();
+        var result = new List<CrossAssemblyRequestInfo>();
+
+        foreach (var referencedAssembly in compilation.SourceModule.ReferencedAssemblySymbols)
+        {
+            ct.ThrowIfCancellationRequested();
+            foreach (var attr in referencedAssembly.GetAttributes())
+            {
+                ct.ThrowIfCancellationRequested();
+                if (!SymbolEqualityComparer.Default.Equals(attr.AttributeClass, knownRequestAttr)) continue;
+                if (attr.ConstructorArguments.Length == 0) continue;
+                if (attr.ConstructorArguments[0].Value is not INamedTypeSymbol requestType) continue;
+
+                var typeRef = requestType.ToTypeRef();
+                if (typeRef.IsOpenGeneric) continue; // can't dispatch open generics
+                if (!seen.Add(typeRef.GlobalName)) continue; // deduplicate
+
+                // Classify by inspecting the request type's interfaces.
+                if (TryClassifyRequestType(requestType, out var kind, out var responseRef, out var depth))
+                {
+                    result.Add(new CrossAssemblyRequestInfo(kind, typeRef, responseRef, depth));
+                }
+            }
+        }
+
+        return new EquatableArray<CrossAssemblyRequestInfo>(result.ToArray());
+    }
+
+    private static bool TryClassifyRequestType(
+        INamedTypeSymbol requestType,
+        out HandlerKind kind,
+        out TypeRef? responseType,
+        out int messageTypeDepth)
+    {
+        kind = default;
+        responseType = null;
+        messageTypeDepth = InheritanceDepth(requestType);
+
+        foreach (var iface in requestType.AllInterfaces)
+        {
+            // IRequest<TResponse> (arity 2 handler interface is on the handler, but
+            // the request type implements IRequest<TResponse> with arity 1).
+            if (iface.IsMDatorInterface("IRequest`1"))
+            {
+                kind = HandlerKind.RequestWithResponse;
+                responseType = iface.TypeArguments[0].ToTypeRef();
+                return true;
+            }
+            if (iface.IsMDatorInterface("IStreamRequest`1"))
+            {
+                kind = HandlerKind.Stream;
+                responseType = iface.TypeArguments[0].ToTypeRef();
+                return true;
+            }
+        }
+
+        // IRequest (void) and INotification have arity 0 — check after generic
+        // interfaces to avoid matching IRequest before IRequest<T> on types that
+        // implement both (they shouldn't, but be safe).
+        foreach (var iface in requestType.AllInterfaces)
+        {
+            if (iface.IsMDatorInterface("IRequest"))
+            {
+                kind = HandlerKind.RequestVoid;
+                return true;
+            }
+            if (iface.IsMDatorInterface("INotification"))
+            {
+                kind = HandlerKind.Notification;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static int InheritanceDepth(ITypeSymbol type)
+    {
+        var depth = 0;
+        var t = type.BaseType;
+        while (t is not null)
+        {
+            depth++;
+            t = t.BaseType;
+        }
+        return depth;
     }
 
     private static EquatableArray<BehaviorInfo> ExtractOpenBehaviors(Compilation compilation, CancellationToken ct)

@@ -5,6 +5,7 @@
     <Project Path="src/MDator/MDator.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/MDator.Tests.CrossAssembly/MDator.Tests.CrossAssembly.csproj" />
     <Project Path="tests/MDator.Tests/MDator.Tests.csproj" />
   </Folder>
   <Folder Name="/samples/">

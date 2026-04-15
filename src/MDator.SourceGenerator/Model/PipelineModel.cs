@@ -7,4 +7,5 @@ namespace MDator.SourceGenerator;
 internal sealed record PipelineModel(
     string RootNamespace,
     EquatableArray<HandlerInfo> Handlers,
-    EquatableArray<BehaviorInfo> Behaviors);
+    EquatableArray<BehaviorInfo> Behaviors,
+    EquatableArray<CrossAssemblyRequestInfo> CrossAssemblyRequests);

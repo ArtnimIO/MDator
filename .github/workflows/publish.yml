@@ -3,6 +3,7 @@ name: Build, Test & Publish
 on:
   push:
     branches: [main]
+    tags: ["v[0-9]+.[0-9]+.[0-9]+*"]
   pull_request:
     branches: [main]
 
@@ -15,8 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0  # full history required by Nerdbank.GitVersioning
 
       - uses: actions/setup-dotnet@v5
         with:
@@ -27,53 +26,30 @@ jobs:
       - name: Build, Test & Pack
         run: ./build.sh Compile Test Pack
 
-      - name: Upload packages
-        uses: actions/upload-artifact@v7
-        with:
-          name: nuget-packages
-          path: output/*.nupkg
-
   publish:
     needs: build-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Download packages
-        uses: actions/download-artifact@v8
-        with:
-          name: nuget-packages
-          path: output
 
       - uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: |
+            9.0.x
+            10.0.x
 
-      - name: Push to NuGet
-        run: ./build.sh Publish --nuget-api-key "$NUGET_APIKEY"
+      - name: Build, Test, Pack & Publish
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ./build.sh Publish --version "$VERSION" --nuget-api-key "$NUGET_APIKEY"
         env:
           NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
 
-  publish-prerelease:
-    needs: build-test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    environment: nuget-prerelease
-    steps:
-      - name: Download packages
-        uses: actions/download-artifact@v8
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: nuget-packages
-          path: output
-
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: 10.0.x
-
-      - name: Push prerelease to NuGet
-        run: dotnet nuget push "output/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_APIKEY" --skip-duplicate
-        env:
-          NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
+          generate_release_notes: true
+          files: output/*.nupkg

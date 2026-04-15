@@ -9,7 +9,7 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
 
     <!-- NuGet package metadata shared across all packable projects.
-         Version is managed by Nerdbank.GitVersioning via version.json. -->
+         Version is set at build time via the Nuke build's "version" parameter. -->
     <Authors>Martin Hans</Authors>
     <Product>MDator</Product>
     <Description>A source-generated, MediatR-compatible mediator for .NET.</Description>
@@ -19,7 +19,4 @@
     <PackageTags>mediator;cqrs;source-generator;pipeline;mediatR</PackageTags>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Nerdbank.GitVersioning" Version="3.7.115" PrivateAssets="all" />
-  </ItemGroup>
 </Project>

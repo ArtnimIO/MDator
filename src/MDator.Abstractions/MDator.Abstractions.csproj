@@ -18,7 +18,6 @@
     <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
     <!-- IAsyncEnumerable<T> polyfill for netstandard2.0. -->
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.5" />
-    <PackageReference Update="Nerdbank.GitVersioning" Version="3.9.50" />
   </ItemGroup>
 
   <ItemGroup>

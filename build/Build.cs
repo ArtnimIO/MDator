@@ -12,6 +12,9 @@ class Build : NukeBuild
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
+    [Parameter("Package version (e.g. 1.0.0). Defaults to '0.0.0-local' for local builds")]
+    readonly string Version = "0.0.0-local";
+
     [Parameter("NuGet API key for publishing packages")]
     [Secret]
     readonly string? NuGetApiKey;
@@ -58,6 +61,7 @@ class Build : NukeBuild
             DotNetTasks.DotNetBuild(s => s
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
+                .SetVersion(Version)
                 .SetNoRestore(true));
         });
 
@@ -80,6 +84,7 @@ class Build : NukeBuild
                 .SetProject(AbstractionsProject)
                 .SetConfiguration(Configuration)
                 .SetNoBuild(true)
+                .SetVersion(Version)
                 .SetOutputDirectory(OutputDirectory));
 
             // MDator — multi-Roslyn pack: build the source generator once per
@@ -96,6 +101,7 @@ class Build : NukeBuild
                 DotNetTasks.DotNetBuild(s => s
                     .SetProjectFile(SourceGeneratorProject)
                     .SetConfiguration(Configuration)
+                    .SetVersion(Version)
                     .SetProperty("ROSLYN_VERSION", roslynVersion));
 
                 // Pack MDator.csproj which bundles the freshly-built generator DLL.
@@ -106,6 +112,7 @@ class Build : NukeBuild
                     .SetProject(MDatorProject)
                     .SetConfiguration(Configuration)
                     .SetNoBuild(true)
+                    .SetVersion(Version)
                     .SetProperty("ROSLYN_VERSION", roslynVersion)
                     .SetOutputDirectory(versionOutputDir));
             }

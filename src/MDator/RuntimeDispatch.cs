@@ -11,10 +11,12 @@ using Microsoft.Extensions.DependencyInjection;
 namespace MDator;
 
 /// <summary>
-/// DI-based runtime dispatch for request types not known at compile time in the
-/// consuming assembly. This is the fallback path for cross-assembly handler
-/// dispatch — the compile-time switch handles same-assembly requests as the fast
-/// path. Called from generated code only.
+/// DI-based runtime dispatch for request types not advertised via
+/// <c>[assembly: KnownRequest]</c> on any referenced assembly. Most cross-assembly
+/// requests are now handled by the compile-time switch (the generator reads
+/// <see cref="KnownRequestAttribute"/> from referenced assemblies). This fallback
+/// only activates for truly dynamic or plugin-loaded request types. Called from
+/// generated code only.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class RuntimeDispatch

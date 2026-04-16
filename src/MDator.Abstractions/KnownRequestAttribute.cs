@@ -3,14 +3,17 @@ using System;
 namespace MDator;
 
 /// <summary>
-/// Adds a specific closed request type to the compile-time dispatcher. Use this
-/// for requests whose closed generic form is not syntactically referenced anywhere
-/// in the consuming assembly — for example, open-generic request handlers that
-/// will only ever be invoked with a runtime-chosen <c>T</c>.
+/// Marks a request or notification type as known so that consuming assemblies can
+/// include it in their compile-time dispatch switch. The generator emits this
+/// attribute automatically for every handler it discovers, enabling cross-assembly
+/// compile-time dispatch without manual configuration.
 /// </summary>
 /// <remarks>
-/// Without this attribute, such requests fall through to the strongly-typed DI
-/// fallback path, which is fine but slower than the generated switch.
+/// You can also apply this attribute manually for requests whose closed generic
+/// form is never syntactically referenced in the consuming assembly — for example,
+/// open-generic request handlers that will only ever be invoked with a
+/// runtime-chosen <c>T</c>. Without this attribute (and without a same-assembly
+/// handler), such requests fall through to <c>RuntimeDispatch</c>.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
 public sealed class KnownRequestAttribute(Type requestType) : Attribute

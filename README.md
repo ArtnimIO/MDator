@@ -307,16 +307,37 @@ Multiple projects can each host handlers. Each project's generator emits its
 own module initializer that appends to `MDatorGeneratedHook.Registrations`.
 When `AddMDator()` runs in the composition root, all callbacks fire.
 
+### Cross-assembly dispatch
+
+When a handler lives in a different assembly from the mediator consumer, the
+generator automatically propagates the request type across the project
+boundary:
+
+1. The handler assembly's generator emits
+   `[assembly: KnownRequest(typeof(MyRequest))]` for every handler it
+   discovers.
+2. The consuming assembly's generator reads these attributes from its
+   referenced assemblies and includes those types in its compile-time
+   `switch` — generating strongly-typed `SendCore_*` pipeline methods with
+   fused open behaviors, just like same-assembly requests.
+3. A `RuntimeDispatch` fallback remains for truly dynamic or plugin-loaded
+   request types that no assembly advertises at compile time.
+
+You can also apply `[assembly: KnownRequest(typeof(...))]` manually for
+requests whose closed generic form is never syntactically referenced in the
+consuming assembly.
+
 ## Project structure
 
 ```
 MDator.slnx
 src/
   MDator.Abstractions/     netstandard2.0 -- interfaces, Unit, attributes
-  MDator/                  net8.0;net9.0  -- runtime, DI extensions, publishers
+  MDator/                  net9.0;net10.0 -- runtime, DI extensions, publishers
   MDator.SourceGenerator/  netstandard2.0 -- incremental generator (analyzer)
 tests/
-  MDator.Tests/            net9.0, xUnit  -- 11 integration tests
+  MDator.Tests/                net10.0, xUnit -- integration tests
+  MDator.Tests.CrossAssembly/  net10.0        -- cross-assembly test handlers
 ```
 
 ## Building

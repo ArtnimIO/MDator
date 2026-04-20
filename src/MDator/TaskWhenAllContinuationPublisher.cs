@@ -8,6 +8,7 @@ namespace MDator;
 /// </summary>
 public sealed class TaskWhenAllContinuationPublisher : INotificationPublisher
 {
+    /// <inheritdoc />
     public Task Publish(
         IReadOnlyList<NotificationHandlerExecutor> handlerExecutors,
         INotification notification,

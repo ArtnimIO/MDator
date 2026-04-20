@@ -6,6 +6,7 @@ namespace MDator;
 /// </summary>
 public sealed class TaskWhenAllPublisher : INotificationPublisher
 {
+    /// <inheritdoc />
     public Task Publish(
         IReadOnlyList<NotificationHandlerExecutor> handlerExecutors,
         INotification notification,

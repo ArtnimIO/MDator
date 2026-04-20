@@ -32,6 +32,21 @@ public readonly struct NotificationHandlerExecutor(
 /// </summary>
 public interface INotificationPublisher
 {
+    /// <summary>
+    /// Publishes the given notification to all provided handlers asynchronously.
+    /// </summary>
+    /// <param name="handlerExecutors">
+    /// A read-only list of notification handler executors that define the instances and callback logic for handling the notification.
+    /// </param>
+    /// <param name="notification">
+    /// The notification to be published to the registered handlers.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A token to observe while waiting for the task to complete. It allows the operation to be canceled if required.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous operation of publishing the notification.
+    /// </returns>
     Task Publish(
         IReadOnlyList<NotificationHandlerExecutor> handlerExecutors,
         INotification notification,

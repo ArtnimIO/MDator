@@ -20,7 +20,27 @@ namespace MDator;
 /// </remarks>
 public static class MDatorServiceCollectionExtensions
 {
-    public static IServiceCollection AddMDator(this IServiceCollection services, Action<MDatorConfiguration>? configure = null)
+    /// <summary>
+    /// Registers MDator services and behaviors within the specified IServiceCollection.
+    /// </summary>
+    /// <param name="services">
+    /// The <see cref="IServiceCollection"/> to add the MDator services to.
+    /// </param>
+    /// <param name="configure">
+    /// An optional configuration delegate to customize the behavior of MDator.
+    /// If not specified, default configuration is used.
+    /// </param>
+    /// <returns>
+    /// The modified <see cref="IServiceCollection"/> with MDator services registered.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown if the <paramref name="services"/> parameter is null.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if no MDator handler registrations are found in the current application context.
+    /// </exception>
+    public static IServiceCollection AddMDator(this IServiceCollection services,
+        Action<MDatorConfiguration>? configure = null)
     {
         if (services is null) throw new ArgumentNullException(nameof(services));
 

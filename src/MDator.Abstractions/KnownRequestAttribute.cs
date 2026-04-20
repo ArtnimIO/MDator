@@ -18,5 +18,12 @@ namespace MDator;
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
 public sealed class KnownRequestAttribute(Type requestType) : Attribute
 {
+    /// <summary>
+    /// Gets the type of the request associated with the KnownRequestAttribute.
+    /// </summary>
+    /// <remarks>
+    /// This property identifies the request type that is marked as "known"
+    /// to facilitate compile-time dispatch across assemblies.
+    /// </remarks>
     public Type RequestType { get; } = requestType;
 }

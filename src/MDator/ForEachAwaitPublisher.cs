@@ -7,6 +7,7 @@ namespace MDator;
 /// </summary>
 public sealed class ForEachAwaitPublisher : INotificationPublisher
 {
+    /// <inheritdoc />
     public async Task Publish(
         IReadOnlyList<NotificationHandlerExecutor> handlerExecutors,
         INotification notification,

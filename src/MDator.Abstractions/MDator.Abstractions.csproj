@@ -15,9 +15,9 @@
 
   <ItemGroup>
     <!-- Polyfills so we can use modern C# features (nullability, init-only, etc.) on netstandard2.0. -->
-    <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
+    <PackageReference Include="PolySharp" PrivateAssets="all" />
     <!-- IAsyncEnumerable<T> polyfill for netstandard2.0. -->
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
   </ItemGroup>
 
   <ItemGroup>

@@ -20,24 +20,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MDator.Abstractions\MDator.Abstractions.csproj" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- Build-time reference so the generator runs during compilation of projects
          that reference MDator. -->
-    <ProjectReference Include="..\MDator.SourceGenerator\MDator.SourceGenerator.csproj"
-                      PrivateAssets="all"
-                      ReferenceOutputAssembly="false"
-                      OutputItemType="Analyzer" />
+    <ProjectReference Include="..\MDator.SourceGenerator\MDator.SourceGenerator.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
 
     <!-- Bundle the generator DLL into the nupkg so consumers get it automatically.
          The Nuke build sets ROSLYN_VERSION per iteration to place each build in
          analyzers/roslyn<ver>/dotnet/cs so the SDK picks the right one. -->
-    <None Include="..\MDator.SourceGenerator\bin\$(Configuration)\netstandard2.0\MDator.SourceGenerator.dll"
-          Pack="true"
-          PackagePath="analyzers/roslyn$(ROSLYN_VERSION)/dotnet/cs"
-          Visible="false" />
+    <None Include="..\MDator.SourceGenerator\bin\$(Configuration)\netstandard2.0\MDator.SourceGenerator.dll" Pack="true" PackagePath="analyzers/roslyn$(ROSLYN_VERSION)/dotnet/cs" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>

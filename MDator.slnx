@@ -8,6 +8,9 @@
     <Project Path="tests/MDator.Tests.CrossAssembly/MDator.Tests.CrossAssembly.csproj" />
     <Project Path="tests/MDator.Tests/MDator.Tests.csproj" />
   </Folder>
+  <Folder Name="/Build/">
+    <Project Path="build/_build.csproj" />
+  </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/MDator.Samples.Domain/MDator.Samples.Domain.csproj" />
     <Project Path="samples/MDator.Samples.Console/MDator.Samples.Console.csproj" />

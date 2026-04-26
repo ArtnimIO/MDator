@@ -252,11 +252,14 @@ services.AddMDator(cfg =>
 
     // Add a closed behavior at runtime (e.g. from an unscanned assembly)
     cfg.AddBehavior<MyClosedBehavior>();
-
-    // Source-compat marker (no-op at runtime; the generator sees the call site)
-    cfg.RegisterServicesFromAssemblyContaining<Program>();
 });
 ```
+
+> **Note for migrators:** `RegisterServicesFromAssembly`,
+> `RegisterServicesFromAssemblies`, and `RegisterServicesFromAssemblyContaining<T>`
+> exist on `MDatorConfiguration` for MediatR source compatibility but have no
+> effect — MDator's source generator scans the consuming compilation directly.
+> The analyzer `MDATOR0001` flags these calls so they can be removed.
 
 ## Migrating from MediatR
 

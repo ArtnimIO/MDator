@@ -29,10 +29,7 @@ builder.Services.AddScoped<IStockAlertRepository, EfStockAlertRepository>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // MDator
-builder.Services.AddMDator(cfg =>
-{
-    cfg.RegisterServicesFromAssemblyContaining<Program>();
-});
+builder.Services.AddMDator();
 
 var app = builder.Build();
 

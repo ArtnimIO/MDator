@@ -20,12 +20,17 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MDator\MDator.csproj" />
     <ProjectReference Include="..\..\src\MDator.Abstractions\MDator.Abstractions.csproj" />
     <ProjectReference Include="..\..\src\MDator.SourceGenerator\MDator.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <!-- A second reference (without OutputItemType) so the analyzer types
+         are visible to in-process analyzer tests. The OutputItemType reference
+         above continues to wire the analyzer into compilation of this project. -->
+    <ProjectReference Include="..\..\src\MDator.SourceGenerator\MDator.SourceGenerator.csproj" />
     <ProjectReference Include="..\MDator.Tests.CrossAssembly\MDator.Tests.CrossAssembly.csproj" />
   </ItemGroup>
 

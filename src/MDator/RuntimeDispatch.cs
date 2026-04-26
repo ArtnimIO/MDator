@@ -37,6 +37,9 @@ public static class RuntimeDispatch
     private static readonly MethodInfo s_streamObjectTyped =
         typeof(RuntimeDispatch).GetMethod(nameof(StreamObjectFallbackTyped), BindingFlags.Static | BindingFlags.NonPublic)!;
 
+    private static readonly MethodInfo s_publishTyped =
+        typeof(RuntimeDispatch).GetMethod(nameof(PublishFallbackTyped), BindingFlags.Static | BindingFlags.NonPublic)!;
+
     private static readonly MethodInfo s_wrapToObjectTask =
         typeof(RuntimeDispatch).GetMethod(nameof(WrapToObjectTask), BindingFlags.Static | BindingFlags.NonPublic)!;
 
@@ -71,11 +74,16 @@ public static class RuntimeDispatch
         IServiceProvider sp, MDatorConfiguration cfg,
         object request, CancellationToken ct);
 
+    private delegate Task PublishThunk(
+        IServiceProvider sp, INotificationPublisher publisher,
+        INotification notification, CancellationToken ct);
+
     private static readonly ConcurrentDictionary<(Type Req, Type Resp), Delegate> s_sendCache = new();
     private static readonly ConcurrentDictionary<Type, SendVoidThunk> s_sendVoidCache = new();
     private static readonly ConcurrentDictionary<Type, SendObjectThunk> s_sendObjectCache = new();
     private static readonly ConcurrentDictionary<(Type Req, Type Resp), Delegate> s_streamCache = new();
     private static readonly ConcurrentDictionary<Type, StreamObjectThunk> s_streamObjectCache = new();
+    private static readonly ConcurrentDictionary<Type, PublishThunk> s_publishCache = new();
 
     // ── Request with response ───────────────────────────────────────────
 
@@ -330,6 +338,51 @@ public static class RuntimeDispatch
         {
             yield return item;
         }
+    }
+
+    // ── Publish ─────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Fallback for <c>Publish&lt;TNotification&gt;(TNotification)</c> and
+    /// <c>Publish(object)</c> when the notification type is not in the
+    /// compile-time switch. Resolves <see cref="INotificationHandler{TNotification}"/>
+    /// instances from DI for the runtime notification type and dispatches them
+    /// through the active <see cref="INotificationPublisher"/>.
+    /// </summary>
+    public static Task PublishFallback(
+        IServiceProvider sp, INotificationPublisher publisher,
+        INotification notification, CancellationToken ct)
+    {
+        var thunk = s_publishCache.GetOrAdd(notification.GetType(), BuildPublishThunk);
+        return thunk(sp, publisher, notification, ct);
+    }
+
+    private static PublishThunk BuildPublishThunk(Type notifType)
+    {
+        var typedMethod = s_publishTyped.MakeGenericMethod(notifType);
+
+        var spP = Expression.Parameter(typeof(IServiceProvider), "sp");
+        var pubP = Expression.Parameter(typeof(INotificationPublisher), "publisher");
+        var nP = Expression.Parameter(typeof(INotification), "n");
+        var ctP = Expression.Parameter(typeof(CancellationToken), "ct");
+
+        var call = Expression.Call(typedMethod, spP, pubP, Expression.Convert(nP, notifType), ctP);
+        return Expression.Lambda<PublishThunk>(call, spP, pubP, nP, ctP).Compile();
+    }
+
+    private static Task PublishFallbackTyped<TNotification>(
+        IServiceProvider sp, INotificationPublisher publisher,
+        TNotification notification, CancellationToken ct)
+        where TNotification : INotification
+    {
+        var handlers = sp.GetServices<INotificationHandler<TNotification>>();
+        var executors = new List<NotificationHandlerExecutor>();
+        foreach (var h in handlers)
+        {
+            var capture = h;
+            executors.Add(new NotificationHandlerExecutor(capture, (msg, c) => capture.Handle((TNotification)msg, c)));
+        }
+        return publisher.Publish(executors, notification, ct);
     }
 
     // ── Behavior chaining helpers ───────────────────────────────────────

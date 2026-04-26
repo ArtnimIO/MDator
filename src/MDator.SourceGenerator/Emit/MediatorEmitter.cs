@@ -547,7 +547,7 @@ internal static class MediatorEmitter
         }
         w.Line("default:");
         w.Indent();
-        w.Line("return global::System.Threading.Tasks.Task.CompletedTask;");
+        w.Line("return global::MDator.RuntimeDispatch.PublishFallback(_sp, _publisher, notification, cancellationToken);");
         w.Dedent();
         w.CloseBrace();
         w.CloseBrace();
@@ -559,7 +559,7 @@ internal static class MediatorEmitter
         w.Line("public global::System.Threading.Tasks.Task Publish(object notification, global::System.Threading.CancellationToken cancellationToken = default)");
         w.OpenBrace();
         w.Line("if (notification is null) throw new global::System.ArgumentNullException(nameof(notification));");
-        w.Line("if (notification is not global::MDator.INotification) throw new global::System.ArgumentException(\"MDator: Publish requires an INotification instance.\", nameof(notification));");
+        w.Line("if (notification is not global::MDator.INotification __n_typed) throw new global::System.ArgumentException(\"MDator: Publish requires an INotification instance.\", nameof(notification));");
         w.Line("switch (notification)");
         w.OpenBrace();
         foreach (HandlerInfo? first in notificationHandlers.Select(kv => kv.Value[0]))
@@ -578,7 +578,7 @@ internal static class MediatorEmitter
         }
         w.Line("default:");
         w.Indent();
-        w.Line("return global::System.Threading.Tasks.Task.CompletedTask;");
+        w.Line("return global::MDator.RuntimeDispatch.PublishFallback(_sp, _publisher, __n_typed, cancellationToken);");
         w.Dedent();
         w.CloseBrace();
         w.CloseBrace();

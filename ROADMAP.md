@@ -38,18 +38,20 @@ array allocation.
 Applies to `SendFallback`, `SendVoidFallback`, `SendObjectFallback`,
 `StreamFallback`, and `StreamObjectFallback`.
 
+### Notification fallback for unknown types
+
+**Status**: Implemented
+
+`Publish<T>` and `Publish(object)` previously returned `Task.CompletedTask`
+when the notification type was not in the compile-time switch — silently
+dropping the message. The generator default arm now calls
+`RuntimeDispatch.PublishFallback`, which resolves
+`INotificationHandler<T>` instances from DI for the runtime notification type
+and dispatches them through the active `INotificationPublisher`. The fallback
+shares the same compiled-delegate cache pattern used by the request/stream
+fallbacks.
+
 ## Known Limitations
-
-### Notification fallback silently drops unknown types
-
-When `Publish<T>` is called with a notification type not in the compile-time
-switch (and not advertised via `[assembly: KnownRequest]`), the generated code
-returns `Task.CompletedTask` — silently dropping the notification. There is no
-`RuntimeDispatch.PublishFallback` equivalent.
-
-**Possible fix**: Add a `PublishFallback` that resolves
-`INotificationHandler<T>` from DI at runtime, mirroring the request fallback
-pattern.
 
 ### Exception handlers not fused for cross-assembly requests
 

@@ -51,6 +51,18 @@ and dispatches them through the active `INotificationPublisher`. The fallback
 shares the same compiled-delegate cache pattern used by the request/stream
 fallbacks.
 
+### Analyzer for MediatR-compat shim methods
+
+**Status**: Implemented
+
+`MDatorConfiguration.RegisterServicesFromAssembly`,
+`RegisterServicesFromAssemblies`, and
+`RegisterServicesFromAssemblyContaining<T>` exist as no-op shims so MediatR
+config code keeps compiling during migration. The new analyzer `MDATOR0001`
+flags these calls at `Info` severity, telling migrators that the call has no
+effect and can be removed — handler discovery is driven by the source
+generator scanning the consuming compilation directly.
+
 ## Known Limitations
 
 ### Exception handlers not fused for cross-assembly requests
@@ -71,14 +83,6 @@ its exception handler registrations.
 Handlers like `GenericHandler<T> : IRequestHandler<GenericRequest<T>, T>` are
 discovered by the generator but excluded from the switch because `typeof()`
 cannot represent open generic types. These always use the DI runtime path.
-
-### `RegisterServicesFromAssembly` is a no-op
-
-`MDatorConfiguration.RegisterServicesFromAssembly()` and
-`RegisterServicesFromAssemblyContaining<T>()` exist for MediatR source
-compatibility but do nothing. Registration is driven entirely by the
-source generator's `[ModuleInitializer]`. This can confuse migrators who
-expect assembly-scanning behavior.
 
 ## Potential Future Work
 

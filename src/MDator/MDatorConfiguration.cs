@@ -44,25 +44,25 @@ public sealed class MDatorConfiguration
     public List<(Type ServiceType, Type ImplementationType, ServiceLifetime Lifetime)> AdditionalBehaviors { get; } = new();
 
     /// <summary>
-    /// Source-compat marker, invoked by the source generator at compile time to
-    /// decide which assemblies to scan. At runtime this is a no-op.
+    /// MediatR source-compatibility shim. Has no effect — MDator's source generator
+    /// scans the consuming compilation directly, so handler discovery is automatic.
+    /// The analyzer <c>MDATOR0001</c> flags calls to this method.
     /// </summary>
     public MDatorConfiguration RegisterServicesFromAssemblyContaining<T>() => this;
 
     /// <summary>
-    /// Source-compat marker, invoked by the source generator at compile time.
+    /// MediatR source-compatibility shim. Has no effect — MDator's source generator
+    /// scans the consuming compilation directly, so handler discovery is automatic.
+    /// The analyzer <c>MDATOR0001</c> flags calls to this method.
     /// </summary>
     public MDatorConfiguration RegisterServicesFromAssembly(System.Reflection.Assembly assembly) => this;
 
     /// <summary>
-    /// Source-compat marker. Delegates to <see cref="RegisterServicesFromAssembly"/> for each assembly.
+    /// MediatR source-compatibility shim. Has no effect — MDator's source generator
+    /// scans the consuming compilation directly, so handler discovery is automatic.
+    /// The analyzer <c>MDATOR0001</c> flags calls to this method.
     /// </summary>
-    public MDatorConfiguration RegisterServicesFromAssemblies(params System.Reflection.Assembly[] assemblies)
-    {
-        foreach (var assembly in assemblies)
-            RegisterServicesFromAssembly(assembly);
-        return this;
-    }
+    public MDatorConfiguration RegisterServicesFromAssemblies(params System.Reflection.Assembly[] assemblies) => this;
 
     /// <summary>
     /// Source-compat marker for MediatR v12 migration.

@@ -289,7 +289,7 @@ MDator ships three assemblies:
 | Assembly | TFM | Purpose |
 |---|---|---|
 | `MDator.Abstractions` | netstandard2.0 | Interfaces, `Unit`, attributes. Reference this from handler libraries. |
-| `MDator` | net8.0, net9.0 | Runtime shell: `AddMDator`, `MDatorConfiguration`, notification publishers. |
+| `MDator` | net9.0, net10.0 | Runtime shell: `AddMDator`, `MDatorConfiguration`, notification publishers. |
 | `MDator.SourceGenerator` | netstandard2.0 | Roslyn incremental source generator, shipped as an analyzer. |
 
 When you reference `MDator`, the generator activates in the consuming project
@@ -323,8 +323,13 @@ boundary:
    referenced assemblies and includes those types in its compile-time
    `switch` — generating strongly-typed `SendCore_*` pipeline methods with
    fused open behaviors, just like same-assembly requests.
-3. A `RuntimeDispatch` fallback remains for truly dynamic or plugin-loaded
-   request types that no assembly advertises at compile time.
+3. A `RuntimeDispatch` fallback covers requests, streams, and notifications
+   for plugin-loaded or otherwise dynamic types that no assembly advertises
+   at compile time. The fallback caches a compiled, strongly-typed delegate
+   per runtime type, so the warm path is close to the compile-time switch in
+   cost. Notifications routed through `RuntimeDispatch.PublishFallback`
+   resolve handlers from DI for the runtime type and dispatch through the
+   active `INotificationPublisher` — no silent drops.
 
 You can also apply `[assembly: KnownRequest(typeof(...))]` manually for
 requests whose closed generic form is never syntactically referenced in the

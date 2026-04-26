@@ -10,6 +10,7 @@ namespace MDator.Tests;
 public sealed record DynPing(int N) : IRequest<int>;
 public sealed record DynVoid(int N) : IRequest;
 public sealed record DynStream(int Count) : IStreamRequest<int>;
+public sealed record DynNotification(int Id) : INotification;
 
 public sealed class DynPingHandler : IRequestHandler<DynPing, int>
 {
@@ -38,6 +39,26 @@ public sealed class DynStreamHandler : IStreamRequestHandler<DynStream, int>
     }
 }
 
+public sealed class DynNotificationHandlerA : INotificationHandler<DynNotification>
+{
+    public static int InvocationCount;
+    public Task Handle(DynNotification n, CancellationToken ct)
+    {
+        Interlocked.Increment(ref InvocationCount);
+        return Task.CompletedTask;
+    }
+}
+
+public sealed class DynNotificationHandlerB : INotificationHandler<DynNotification>
+{
+    public static int InvocationCount;
+    public Task Handle(DynNotification n, CancellationToken ct)
+    {
+        Interlocked.Increment(ref InvocationCount);
+        return Task.CompletedTask;
+    }
+}
+
 public sealed class RuntimeDispatchCacheTests
 {
     private static (IServiceProvider Sp, MDatorConfiguration Cfg) BuildBareContainer()
@@ -46,6 +67,8 @@ public sealed class RuntimeDispatchCacheTests
         services.AddTransient<IRequestHandler<DynPing, int>, DynPingHandler>();
         services.AddTransient<IRequestHandler<DynVoid>, DynVoidHandler>();
         services.AddTransient<IStreamRequestHandler<DynStream, int>, DynStreamHandler>();
+        services.AddTransient<INotificationHandler<DynNotification>, DynNotificationHandlerA>();
+        services.AddTransient<INotificationHandler<DynNotification>, DynNotificationHandlerB>();
         var sp = services.BuildServiceProvider();
         return (sp, new MDatorConfiguration { FuseOnly = true });
     }
@@ -171,5 +194,58 @@ public sealed class RuntimeDispatchCacheTests
             .ToArray();
 
         await Task.WhenAll(tasks);
+    }
+
+    [Fact]
+    public async Task PublishFallback_invokes_every_registered_handler()
+    {
+        var (sp, _) = BuildBareContainer();
+        var publisher = new ForEachAwaitPublisher();
+        var beforeA = DynNotificationHandlerA.InvocationCount;
+        var beforeB = DynNotificationHandlerB.InvocationCount;
+
+        await RuntimeDispatch.PublishFallback(sp, publisher, new DynNotification(1), default);
+
+        Assert.Equal(beforeA + 1, DynNotificationHandlerA.InvocationCount);
+        Assert.Equal(beforeB + 1, DynNotificationHandlerB.InvocationCount);
+    }
+
+    [Fact]
+    public async Task PublishFallback_hot_loop_dispatches_correctly_with_cached_delegate()
+    {
+        var (sp, _) = BuildBareContainer();
+        var publisher = new ForEachAwaitPublisher();
+        var beforeA = DynNotificationHandlerA.InvocationCount;
+
+        for (var i = 0; i < 500; i++)
+            await RuntimeDispatch.PublishFallback(sp, publisher, new DynNotification(i), default);
+
+        Assert.Equal(beforeA + 500, DynNotificationHandlerA.InvocationCount);
+    }
+
+    [Fact]
+    public async Task PublishFallback_honors_configured_publisher_strategy()
+    {
+        var (sp, _) = BuildBareContainer();
+        var publisher = new TaskWhenAllPublisher();
+        var beforeA = DynNotificationHandlerA.InvocationCount;
+        var beforeB = DynNotificationHandlerB.InvocationCount;
+
+        await RuntimeDispatch.PublishFallback(sp, publisher, new DynNotification(42), default);
+
+        Assert.Equal(beforeA + 1, DynNotificationHandlerA.InvocationCount);
+        Assert.Equal(beforeB + 1, DynNotificationHandlerB.InvocationCount);
+    }
+
+    [Fact]
+    public async Task PublishFallback_with_no_handlers_completes_silently()
+    {
+        // Bare container with zero INotificationHandler<DynNotification> registrations.
+        // The fallback should resolve an empty enumerable and complete without throwing —
+        // matching MediatR's "no handler is fine" semantic.
+        var sp = new ServiceCollection().BuildServiceProvider();
+        var publisher = new ForEachAwaitPublisher();
+
+        await RuntimeDispatch.PublishFallback(sp, publisher, new DynNotification(0), default);
     }
 }

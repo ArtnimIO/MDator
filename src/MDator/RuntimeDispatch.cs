@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -21,7 +23,7 @@ namespace MDator;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class RuntimeDispatch
 {
-    // ── Cached MethodInfo for MakeGenericMethod ─────────────────────────
+    // ── Cached MethodInfo for the typed fallback workers ─────────────────
 
     private static readonly MethodInfo s_sendTyped =
         typeof(RuntimeDispatch).GetMethod(nameof(SendFallbackTyped), BindingFlags.Static | BindingFlags.NonPublic)!;
@@ -35,6 +37,46 @@ public static class RuntimeDispatch
     private static readonly MethodInfo s_streamObjectTyped =
         typeof(RuntimeDispatch).GetMethod(nameof(StreamObjectFallbackTyped), BindingFlags.Static | BindingFlags.NonPublic)!;
 
+    private static readonly MethodInfo s_wrapToObjectTask =
+        typeof(RuntimeDispatch).GetMethod(nameof(WrapToObjectTask), BindingFlags.Static | BindingFlags.NonPublic)!;
+
+    private static readonly MethodInfo s_wrapVoidToObjectTask =
+        typeof(RuntimeDispatch).GetMethod(nameof(WrapVoidToObjectTask), BindingFlags.Static | BindingFlags.NonPublic)!;
+
+    // ── Compiled-delegate caches ─────────────────────────────────────────
+    //
+    // First call per (TRequest, TResponse) pair builds an Expression-tree
+    // wrapper that closes the open generic and casts the request to its
+    // runtime type. Subsequent calls hit a ConcurrentDictionary lookup +
+    // delegate invoke — no MakeGenericMethod, no MethodInfo.Invoke, no
+    // object[] arg array.
+
+    private delegate Task<TResponse> SendThunk<TResponse>(
+        IServiceProvider sp, MDatorConfiguration cfg,
+        IRequest<TResponse> request, CancellationToken ct);
+
+    private delegate Task SendVoidThunk(
+        IServiceProvider sp, MDatorConfiguration cfg,
+        IRequest request, CancellationToken ct);
+
+    private delegate Task<object?> SendObjectThunk(
+        IServiceProvider sp, MDatorConfiguration cfg,
+        object request, CancellationToken ct);
+
+    private delegate IAsyncEnumerable<TResponse> StreamThunk<TResponse>(
+        IServiceProvider sp, MDatorConfiguration cfg,
+        IStreamRequest<TResponse> request, CancellationToken ct);
+
+    private delegate IAsyncEnumerable<object?> StreamObjectThunk(
+        IServiceProvider sp, MDatorConfiguration cfg,
+        object request, CancellationToken ct);
+
+    private static readonly ConcurrentDictionary<(Type Req, Type Resp), Delegate> s_sendCache = new();
+    private static readonly ConcurrentDictionary<Type, SendVoidThunk> s_sendVoidCache = new();
+    private static readonly ConcurrentDictionary<Type, SendObjectThunk> s_sendObjectCache = new();
+    private static readonly ConcurrentDictionary<(Type Req, Type Resp), Delegate> s_streamCache = new();
+    private static readonly ConcurrentDictionary<Type, StreamObjectThunk> s_streamObjectCache = new();
+
     // ── Request with response ───────────────────────────────────────────
 
     /// <summary>
@@ -45,8 +87,25 @@ public static class RuntimeDispatch
         IServiceProvider sp, MDatorConfiguration cfg,
         IRequest<TResponse> request, CancellationToken ct)
     {
-        var method = s_sendTyped.MakeGenericMethod(request.GetType(), typeof(TResponse));
-        return (Task<TResponse>)method.Invoke(null, new object[] { sp, cfg, request, ct })!;
+        var thunk = (SendThunk<TResponse>)s_sendCache.GetOrAdd(
+            (request.GetType(), typeof(TResponse)),
+            BuildSendThunk);
+        return thunk(sp, cfg, request, ct);
+    }
+
+    private static Delegate BuildSendThunk((Type Req, Type Resp) key)
+    {
+        var (reqType, respType) = key;
+        var typedMethod = s_sendTyped.MakeGenericMethod(reqType, respType);
+        var delegateType = typeof(SendThunk<>).MakeGenericType(respType);
+
+        var spP = Expression.Parameter(typeof(IServiceProvider), "sp");
+        var cfgP = Expression.Parameter(typeof(MDatorConfiguration), "cfg");
+        var reqP = Expression.Parameter(typeof(IRequest<>).MakeGenericType(respType), "req");
+        var ctP = Expression.Parameter(typeof(CancellationToken), "ct");
+
+        var call = Expression.Call(typedMethod, spP, cfgP, Expression.Convert(reqP, reqType), ctP);
+        return Expression.Lambda(delegateType, call, spP, cfgP, reqP, ctP).Compile();
     }
 
     private static async Task<TResponse> SendFallbackTyped<TRequest, TResponse>(
@@ -84,8 +143,21 @@ public static class RuntimeDispatch
         TRequest request, CancellationToken ct)
         where TRequest : IRequest
     {
-        var method = s_sendVoidTyped.MakeGenericMethod(request!.GetType());
-        return (Task)method.Invoke(null, new object[] { sp, cfg, request, ct })!;
+        var thunk = s_sendVoidCache.GetOrAdd(request!.GetType(), BuildSendVoidThunk);
+        return thunk(sp, cfg, request, ct);
+    }
+
+    private static SendVoidThunk BuildSendVoidThunk(Type reqType)
+    {
+        var typedMethod = s_sendVoidTyped.MakeGenericMethod(reqType);
+
+        var spP = Expression.Parameter(typeof(IServiceProvider), "sp");
+        var cfgP = Expression.Parameter(typeof(MDatorConfiguration), "cfg");
+        var reqP = Expression.Parameter(typeof(IRequest), "req");
+        var ctP = Expression.Parameter(typeof(CancellationToken), "ct");
+
+        var call = Expression.Call(typedMethod, spP, cfgP, Expression.Convert(reqP, reqType), ctP);
+        return Expression.Lambda<SendVoidThunk>(call, spP, cfgP, reqP, ctP).Compile();
     }
 
     private static async Task SendVoidFallbackTyped<TRequest>(
@@ -114,36 +186,57 @@ public static class RuntimeDispatch
     /// Fallback for <c>Send(object)</c> when the request type is not in the
     /// compile-time switch.
     /// </summary>
-    public static async Task<object?> SendObjectFallback(
+    public static Task<object?> SendObjectFallback(
         IServiceProvider sp, MDatorConfiguration cfg,
         object request, CancellationToken ct)
     {
-        var requestType = request.GetType();
+        var thunk = s_sendObjectCache.GetOrAdd(request.GetType(), BuildSendObjectThunk);
+        return thunk(sp, cfg, request, ct);
+    }
 
-        // Check for IRequest<TResponse>
-        foreach (var iface in requestType.GetInterfaces())
+    private static SendObjectThunk BuildSendObjectThunk(Type reqType)
+    {
+        var spP = Expression.Parameter(typeof(IServiceProvider), "sp");
+        var cfgP = Expression.Parameter(typeof(MDatorConfiguration), "cfg");
+        var reqP = Expression.Parameter(typeof(object), "req");
+        var ctP = Expression.Parameter(typeof(CancellationToken), "ct");
+        var castReq = Expression.Convert(reqP, reqType);
+
+        // IRequest<TResponse> takes precedence (matches original behavior).
+        foreach (var iface in reqType.GetInterfaces())
         {
             if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IRequest<>))
             {
-                var responseType = iface.GetGenericArguments()[0];
-                var method = s_sendTyped.MakeGenericMethod(requestType, responseType);
-                var task = (Task)method.Invoke(null, new object[] { sp, cfg, request, ct })!;
-                await task.ConfigureAwait(false);
-                return task.GetType().GetProperty("Result")!.GetValue(task);
+                var respType = iface.GetGenericArguments()[0];
+                var typedMethod = s_sendTyped.MakeGenericMethod(reqType, respType);
+                var wrap = s_wrapToObjectTask.MakeGenericMethod(respType);
+
+                var typedCall = Expression.Call(typedMethod, spP, cfgP, castReq, ctP);
+                var body = Expression.Call(wrap, typedCall);
+                return Expression.Lambda<SendObjectThunk>(body, spP, cfgP, reqP, ctP).Compile();
             }
         }
 
-        // Check for IRequest (void)
-        if (request is IRequest)
+        if (typeof(IRequest).IsAssignableFrom(reqType))
         {
-            var method = s_sendVoidTyped.MakeGenericMethod(requestType);
-            await ((Task)method.Invoke(null, new object[] { sp, cfg, request, ct })!).ConfigureAwait(false);
-            return null;
+            var typedMethod = s_sendVoidTyped.MakeGenericMethod(reqType);
+            var voidCall = Expression.Call(typedMethod, spP, cfgP, castReq, ctP);
+            var body = Expression.Call(s_wrapVoidToObjectTask, voidCall);
+            return Expression.Lambda<SendObjectThunk>(body, spP, cfgP, reqP, ctP).Compile();
         }
 
         throw new InvalidOperationException(
-            $"MDator: no handler known for request type '{requestType.FullName}'. " +
+            $"MDator: no handler known for request type '{reqType.FullName}'. " +
             "The type does not implement IRequest or IRequest<TResponse>.");
+    }
+
+    private static async Task<object?> WrapToObjectTask<TResponse>(Task<TResponse> task)
+        => await task.ConfigureAwait(false);
+
+    private static async Task<object?> WrapVoidToObjectTask(Task task)
+    {
+        await task.ConfigureAwait(false);
+        return null;
     }
 
     // ── Stream with response ────────────────────────────────────────────
@@ -156,8 +249,25 @@ public static class RuntimeDispatch
         IServiceProvider sp, MDatorConfiguration cfg,
         IStreamRequest<TResponse> request, CancellationToken ct)
     {
-        var method = s_streamTyped.MakeGenericMethod(request.GetType(), typeof(TResponse));
-        return (IAsyncEnumerable<TResponse>)method.Invoke(null, new object[] { sp, cfg, request, ct })!;
+        var thunk = (StreamThunk<TResponse>)s_streamCache.GetOrAdd(
+            (request.GetType(), typeof(TResponse)),
+            BuildStreamThunk);
+        return thunk(sp, cfg, request, ct);
+    }
+
+    private static Delegate BuildStreamThunk((Type Req, Type Resp) key)
+    {
+        var (reqType, respType) = key;
+        var typedMethod = s_streamTyped.MakeGenericMethod(reqType, respType);
+        var delegateType = typeof(StreamThunk<>).MakeGenericType(respType);
+
+        var spP = Expression.Parameter(typeof(IServiceProvider), "sp");
+        var cfgP = Expression.Parameter(typeof(MDatorConfiguration), "cfg");
+        var reqP = Expression.Parameter(typeof(IStreamRequest<>).MakeGenericType(respType), "req");
+        var ctP = Expression.Parameter(typeof(CancellationToken), "ct");
+
+        var call = Expression.Call(typedMethod, spP, cfgP, Expression.Convert(reqP, reqType), ctP);
+        return Expression.Lambda(delegateType, call, spP, cfgP, reqP, ctP).Compile();
     }
 
     private static IAsyncEnumerable<TResponse> StreamFallbackTyped<TRequest, TResponse>(
@@ -182,19 +292,31 @@ public static class RuntimeDispatch
         IServiceProvider sp, MDatorConfiguration cfg,
         object request, CancellationToken ct)
     {
-        var requestType = request.GetType();
-        foreach (var iface in requestType.GetInterfaces())
+        var thunk = s_streamObjectCache.GetOrAdd(request.GetType(), BuildStreamObjectThunk);
+        return thunk(sp, cfg, request, ct);
+    }
+
+    private static StreamObjectThunk BuildStreamObjectThunk(Type reqType)
+    {
+        foreach (var iface in reqType.GetInterfaces())
         {
             if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IStreamRequest<>))
             {
-                var responseType = iface.GetGenericArguments()[0];
-                var method = s_streamObjectTyped.MakeGenericMethod(requestType, responseType);
-                return (IAsyncEnumerable<object?>)method.Invoke(null, new object[] { sp, cfg, request, ct })!;
+                var respType = iface.GetGenericArguments()[0];
+                var typedMethod = s_streamObjectTyped.MakeGenericMethod(reqType, respType);
+
+                var spP = Expression.Parameter(typeof(IServiceProvider), "sp");
+                var cfgP = Expression.Parameter(typeof(MDatorConfiguration), "cfg");
+                var reqP = Expression.Parameter(typeof(object), "req");
+                var ctP = Expression.Parameter(typeof(CancellationToken), "ct");
+
+                var call = Expression.Call(typedMethod, spP, cfgP, Expression.Convert(reqP, reqType), ctP);
+                return Expression.Lambda<StreamObjectThunk>(call, spP, cfgP, reqP, ctP).Compile();
             }
         }
 
         throw new InvalidOperationException(
-            $"MDator: no stream handler known for request type '{requestType.FullName}'. " +
+            $"MDator: no stream handler known for request type '{reqType.FullName}'. " +
             "The type does not implement IStreamRequest<TResponse>.");
     }
 

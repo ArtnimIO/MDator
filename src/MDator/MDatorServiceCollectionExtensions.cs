@@ -55,9 +55,15 @@ public static class MDatorServiceCollectionExtensions
                 "generator runs, and that it actually contains at least one handler.");
         }
 
-        foreach (var register in MDatorGeneratedHook.Registrations)
+        // Index loop, not foreach: invoking a registration callback can
+        // trigger lazy load of a referenced handler-bearing assembly, whose
+        // module initializer appends to MDatorGeneratedHook.Registrations. We
+        // want those late arrivals to register too, so we re-read Count each
+        // iteration rather than snapshotting (and we'd crash with "Collection
+        // was modified" under foreach).
+        for (int i = 0; i < MDatorGeneratedHook.Registrations.Count; i++)
         {
-            register(services, cfg);
+            MDatorGeneratedHook.Registrations[i](services, cfg);
         }
 
         foreach (var (serviceType, implementationType, lifetime) in cfg.AdditionalBehaviors)

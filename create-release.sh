@@ -132,6 +132,18 @@ gh pr create \
     --body "${PR_BODY}"
 
 note "Waiting for required checks on ${RELEASE_BRANCH}"
+# `gh pr checks --watch` only watches checks that already exist; right after
+# `gh pr create` GitHub usually hasn't registered the workflow runs against
+# the head ref yet, and --watch exits early with "no checks reported". Poll
+# the JSON output until at least one check shows up, then hand off to --watch.
+poll_attempts=0
+until [[ "$(gh pr checks "${RELEASE_BRANCH}" --json state --jq 'length' 2>/dev/null || echo 0)" -gt 0 ]]; do
+    poll_attempts=$((poll_attempts + 1))
+    if (( poll_attempts > 24 )); then
+        fail "no checks reported on ${RELEASE_BRANCH} after 2 minutes"
+    fi
+    sleep 5
+done
 gh pr checks "${RELEASE_BRANCH}" --watch --interval 15
 
 note "Merging release PR"

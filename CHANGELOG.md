@@ -11,6 +11,8 @@ list — this file curates the user-visible changes.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-06
+
 ### Fixed
 
 - `AddMDator` no longer throws `InvalidOperationException: Collection was
@@ -33,5 +35,6 @@ list — this file curates the user-visible changes.
 
 For prior releases see the [GitHub Releases](https://github.com/ArtnimIO/MDator/releases).
 
-[Unreleased]: https://github.com/ArtnimIO/MDator/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/ArtnimIO/MDator/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/ArtnimIO/MDator/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ArtnimIO/MDator/compare/v0.3.0...v0.4.0

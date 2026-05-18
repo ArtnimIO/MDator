@@ -8,18 +8,18 @@ public record ListProductsQuery(int Skip = 0, int Take = 50) : IRequest<IReadOnl
 public sealed class ListProductsHandler(IProductRepository repo)
     : IRequestHandler<ListProductsQuery, IReadOnlyList<Product>>
 {
-    public Task<IReadOnlyList<Product>> Handle(ListProductsQuery request, CancellationToken ct)
-        => repo.GetAllAsync(request.Skip, request.Take, ct);
+  public Task<IReadOnlyList<Product>> Handle(ListProductsQuery request, CancellationToken ct)
+      => repo.GetAllAsync(request.Skip, request.Take, ct);
 }
 
 public static class ListProductsEndpoint
 {
-    public static void Map(RouteGroupBuilder group)
+  public static void Map(RouteGroupBuilder group)
+  {
+    group.MapGet("/", async (int? skip, int? take, IMediator mediator) =>
     {
-        group.MapGet("/", async (int? skip, int? take, IMediator mediator) =>
-        {
-            var products = await mediator.Send(new ListProductsQuery(skip ?? 0, take ?? 50));
-            return Results.Ok(products);
-        });
-    }
+      var products = await mediator.Send(new ListProductsQuery(skip ?? 0, take ?? 50));
+      return Results.Ok(products);
+    });
+  }
 }

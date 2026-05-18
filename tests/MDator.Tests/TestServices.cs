@@ -9,11 +9,11 @@ namespace MDator.Tests;
 /// </summary>
 internal static class TestServices
 {
-    public static ServiceProvider Build(Action<MDatorConfiguration>? configure = null)
-    {
-        var services = new ServiceCollection();
-        services.AddSingleton<Log>();
-        services.AddMDator(configure);
-        return services.BuildServiceProvider();
-    }
+  public static ServiceProvider Build(Action<MDatorConfiguration>? configure = null)
+  {
+    var services = new ServiceCollection();
+    services.AddSingleton<Log>();
+    services.AddMDator(configure);
+    return services.BuildServiceProvider();
+  }
 }

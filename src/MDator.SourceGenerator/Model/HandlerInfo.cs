@@ -2,14 +2,14 @@ namespace MDator.SourceGenerator;
 
 internal enum HandlerKind
 {
-    RequestWithResponse,
-    RequestVoid,
-    Notification,
-    Stream,
-    PreProcessor,
-    PostProcessor,
-    ExceptionHandler,
-    ExceptionAction,
+  RequestWithResponse,
+  RequestVoid,
+  Notification,
+  Stream,
+  PreProcessor,
+  PostProcessor,
+  ExceptionHandler,
+  ExceptionAction,
 }
 
 /// <summary>

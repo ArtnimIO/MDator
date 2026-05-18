@@ -2,8 +2,8 @@ namespace MDator.SourceGenerator;
 
 internal enum BehaviorKind
 {
-    Request,
-    Stream,
+  Request,
+  Stream,
 }
 
 /// <summary>

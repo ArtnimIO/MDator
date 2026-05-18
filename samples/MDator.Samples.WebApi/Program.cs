@@ -36,21 +36,21 @@ var app = builder.Build();
 // Seed data
 await using (var scope = app.Services.CreateAsyncScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+  var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    var electronics = new Category { Name = "Electronics", Description = "Electronic devices and components" };
-    var tools = new Category { Name = "Tools", Description = "Hand and power tools" };
-    db.Categories.AddRange(electronics, tools);
+  var electronics = new Category { Name = "Electronics", Description = "Electronic devices and components" };
+  var tools = new Category { Name = "Tools", Description = "Hand and power tools" };
+  db.Categories.AddRange(electronics, tools);
 
-    db.Products.AddRange(
-        new Product { Name = "Wireless Mouse", Sku = "ELEC-001", Price = 29.99m, StockQuantity = 150, CategoryId = electronics.Id, Description = "Ergonomic wireless mouse" },
-        new Product { Name = "USB-C Hub", Sku = "ELEC-002", Price = 49.99m, StockQuantity = 75, CategoryId = electronics.Id, Description = "7-port USB-C hub" },
-        new Product { Name = "Mechanical Keyboard", Sku = "ELEC-003", Price = 89.99m, StockQuantity = 3, CategoryId = electronics.Id, Description = "RGB mechanical keyboard" },
-        new Product { Name = "Cordless Drill", Sku = "TOOL-001", Price = 79.99m, StockQuantity = 40, CategoryId = tools.Id, Description = "18V cordless drill" },
-        new Product { Name = "Socket Set", Sku = "TOOL-002", Price = 34.99m, StockQuantity = 0, CategoryId = tools.Id, Description = "72-piece socket set" }
-    );
+  db.Products.AddRange(
+      new Product { Name = "Wireless Mouse", Sku = "ELEC-001", Price = 29.99m, StockQuantity = 150, CategoryId = electronics.Id, Description = "Ergonomic wireless mouse" },
+      new Product { Name = "USB-C Hub", Sku = "ELEC-002", Price = 49.99m, StockQuantity = 75, CategoryId = electronics.Id, Description = "7-port USB-C hub" },
+      new Product { Name = "Mechanical Keyboard", Sku = "ELEC-003", Price = 89.99m, StockQuantity = 3, CategoryId = electronics.Id, Description = "RGB mechanical keyboard" },
+      new Product { Name = "Cordless Drill", Sku = "TOOL-001", Price = 79.99m, StockQuantity = 40, CategoryId = tools.Id, Description = "18V cordless drill" },
+      new Product { Name = "Socket Set", Sku = "TOOL-002", Price = 34.99m, StockQuantity = 0, CategoryId = tools.Id, Description = "72-piece socket set" }
+  );
 
-    await db.SaveChangesAsync();
+  await db.SaveChangesAsync();
 }
 
 // Product endpoints

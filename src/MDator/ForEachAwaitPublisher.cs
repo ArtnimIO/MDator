@@ -7,15 +7,15 @@ namespace MDator;
 /// </summary>
 public sealed class ForEachAwaitPublisher : INotificationPublisher
 {
-    /// <inheritdoc />
-    public async Task Publish(
-        IReadOnlyList<NotificationHandlerExecutor> handlerExecutors,
-        INotification notification,
-        CancellationToken cancellationToken)
+  /// <inheritdoc />
+  public async Task Publish(
+      IReadOnlyList<NotificationHandlerExecutor> handlerExecutors,
+      INotification notification,
+      CancellationToken cancellationToken)
+  {
+    for (var i = 0; i < handlerExecutors.Count; i++)
     {
-        for (var i = 0; i < handlerExecutors.Count; i++)
-        {
-            await handlerExecutors[i].HandlerCallback(notification, cancellationToken).ConfigureAwait(false);
-        }
+      await handlerExecutors[i].HandlerCallback(notification, cancellationToken).ConfigureAwait(false);
     }
+  }
 }

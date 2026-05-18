@@ -14,38 +14,38 @@ namespace MDator.SourceGenerator;
 internal readonly struct EquatableArray<T>(T[] items) : IEquatable<EquatableArray<T>>, IEnumerable<T>
     where T : IEquatable<T>
 {
-    public static readonly EquatableArray<T> Empty = new([]);
+  public static readonly EquatableArray<T> Empty = new([]);
 
-    private T[] Items { get; } = items;
+  private T[] Items { get; } = items;
 
-    public int Count => Items?.Length ?? 0;
+  public int Count => Items?.Length ?? 0;
 
-    public T this[int index] => Items[index];
+  public T this[int index] => Items[index];
 
-    public bool Equals(EquatableArray<T> other)
+  public bool Equals(EquatableArray<T> other)
+  {
+    var a = Items ?? [];
+    var b = other.Items;
+    if (a.Length != b.Length) return false;
+    return !a.Where((t, i) => !EqualityComparer<T>.Default.Equals(t, b[i])).Any();
+  }
+
+  public override bool Equals(object? obj) => obj is EquatableArray<T> a && Equals(a);
+
+  public override int GetHashCode()
+  {
+    if (Items is null) return 0;
+    unchecked
     {
-        var a = Items ?? [];
-        var b = other.Items;
-        if (a.Length != b.Length) return false;
-        return !a.Where((t, i) => !EqualityComparer<T>.Default.Equals(t, b[i])).Any();
+      return Items.Aggregate(17, (current, item) => current * 31 + (item?.GetHashCode() ?? 0));
     }
+  }
 
-    public override bool Equals(object? obj) => obj is EquatableArray<T> a && Equals(a);
+  public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>)(Items ?? [])).GetEnumerator();
+  IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    public override int GetHashCode()
-    {
-        if (Items is null) return 0;
-        unchecked
-        {
-            return Items.Aggregate(17, (current, item) => current * 31 + (item?.GetHashCode() ?? 0));
-        }
-    }
+  public static EquatableArray<T> From(IEnumerable<T> source) => new(source.ToArray());
 
-    public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>)(Items ?? [])).GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    public static EquatableArray<T> From(IEnumerable<T> source) => new(source.ToArray());
-
-    public static bool operator ==(EquatableArray<T> left, EquatableArray<T> right) => left.Equals(right);
-    public static bool operator !=(EquatableArray<T> left, EquatableArray<T> right) => !left.Equals(right);
+  public static bool operator ==(EquatableArray<T> left, EquatableArray<T> right) => left.Equals(right);
+  public static bool operator !=(EquatableArray<T> left, EquatableArray<T> right) => !left.Equals(right);
 }

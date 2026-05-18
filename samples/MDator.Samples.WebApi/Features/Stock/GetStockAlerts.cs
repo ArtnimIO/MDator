@@ -8,18 +8,18 @@ public record GetStockAlertsQuery(int Count = 20) : IRequest<IReadOnlyList<Stock
 public sealed class GetStockAlertsHandler(IStockAlertRepository repo)
     : IRequestHandler<GetStockAlertsQuery, IReadOnlyList<StockAlert>>
 {
-    public Task<IReadOnlyList<StockAlert>> Handle(GetStockAlertsQuery request, CancellationToken ct)
-        => repo.GetRecentAsync(request.Count, ct);
+  public Task<IReadOnlyList<StockAlert>> Handle(GetStockAlertsQuery request, CancellationToken ct)
+      => repo.GetRecentAsync(request.Count, ct);
 }
 
 public static class GetStockAlertsEndpoint
 {
-    public static void Map(RouteGroupBuilder group)
+  public static void Map(RouteGroupBuilder group)
+  {
+    group.MapGet("/alerts", async (int? count, IMediator mediator) =>
     {
-        group.MapGet("/alerts", async (int? count, IMediator mediator) =>
-        {
-            var alerts = await mediator.Send(new GetStockAlertsQuery(count ?? 20));
-            return Results.Ok(alerts);
-        });
-    }
+      var alerts = await mediator.Send(new GetStockAlertsQuery(count ?? 20));
+      return Results.Ok(alerts);
+    });
+  }
 }

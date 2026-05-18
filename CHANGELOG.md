@@ -11,6 +11,12 @@ list — this file curates the user-visible changes.
 
 ## [Unreleased]
 
+### Changed
+
+- The generated `MDatorGeneratedRegistration` class is now decorated with
+  `[ExcludeFromCodeCoverage]` so it is no longer counted in consumer coverage
+  reports. Thanks to @MPapst (#48).
+
 ## [0.5.0] - 2026-05-06
 
 ### Fixed

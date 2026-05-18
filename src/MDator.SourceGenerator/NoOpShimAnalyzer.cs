@@ -15,47 +15,47 @@ namespace MDator.SourceGenerator;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class NoOpShimAnalyzer : DiagnosticAnalyzer
 {
-    public const string DiagnosticId = "MDATOR0001";
+  public const string DiagnosticId = "MDATOR0001";
 
-    private static readonly DiagnosticDescriptor Rule = new(
-        id: DiagnosticId,
-        title: "MDator MediatR-compat shim has no effect",
-        messageFormat: "'{0}' is a MediatR source-compatibility shim and has no effect; MDator's source generator discovers handlers automatically",
-        category: "Usage",
-        defaultSeverity: DiagnosticSeverity.Info,
-        isEnabledByDefault: true,
-        description:
-            "MDatorConfiguration.RegisterServicesFromAssembly, RegisterServicesFromAssemblies, " +
-            "and RegisterServicesFromAssemblyContaining<T> exist for MediatR migration ergonomics " +
-            "but do not affect handler discovery. The generator scans the consuming compilation " +
-            "directly. The call can be removed.");
+  private static readonly DiagnosticDescriptor Rule = new(
+      id: DiagnosticId,
+      title: "MDator MediatR-compat shim has no effect",
+      messageFormat: "'{0}' is a MediatR source-compatibility shim and has no effect; MDator's source generator discovers handlers automatically",
+      category: "Usage",
+      defaultSeverity: DiagnosticSeverity.Info,
+      isEnabledByDefault: true,
+      description:
+          "MDatorConfiguration.RegisterServicesFromAssembly, RegisterServicesFromAssemblies, " +
+          "and RegisterServicesFromAssemblyContaining<T> exist for MediatR migration ergonomics " +
+          "but do not affect handler discovery. The generator scans the consuming compilation " +
+          "directly. The call can be removed.");
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+  public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
-    public override void Initialize(AnalysisContext context)
+  public override void Initialize(AnalysisContext context)
+  {
+    context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+    context.EnableConcurrentExecution();
+    context.RegisterCompilationStartAction(static startCtx =>
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-        context.EnableConcurrentExecution();
-        context.RegisterCompilationStartAction(static startCtx =>
-        {
-            var configType = startCtx.Compilation.GetTypeByMetadataName("MDator.MDatorConfiguration");
-            if (configType is null) return;
+      var configType = startCtx.Compilation.GetTypeByMetadataName("MDator.MDatorConfiguration");
+      if (configType is null) return;
 
-            startCtx.RegisterOperationAction(opCtx =>
-            {
-                var inv = (IInvocationOperation)opCtx.Operation;
-                var method = inv.TargetMethod;
+      startCtx.RegisterOperationAction(opCtx =>
+          {
+          var inv = (IInvocationOperation)opCtx.Operation;
+          var method = inv.TargetMethod;
 
-                if (!SymbolEqualityComparer.Default.Equals(method.ContainingType, configType)) return;
+          if (!SymbolEqualityComparer.Default.Equals(method.ContainingType, configType)) return;
 
-                var name = method.Name;
-                if (name == "RegisterServicesFromAssembly" ||
-                    name == "RegisterServicesFromAssemblies" ||
-                    name == "RegisterServicesFromAssemblyContaining")
-                {
-                    opCtx.ReportDiagnostic(Diagnostic.Create(Rule, inv.Syntax.GetLocation(), name));
-                }
-            }, OperationKind.Invocation);
-        });
-    }
+          var name = method.Name;
+          if (name == "RegisterServicesFromAssembly" ||
+                  name == "RegisterServicesFromAssemblies" ||
+                  name == "RegisterServicesFromAssemblyContaining")
+          {
+            opCtx.ReportDiagnostic(Diagnostic.Create(Rule, inv.Syntax.GetLocation(), name));
+          }
+        }, OperationKind.Invocation);
+    });
+  }
 }

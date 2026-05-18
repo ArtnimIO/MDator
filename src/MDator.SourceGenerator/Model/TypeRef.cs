@@ -19,46 +19,46 @@ internal sealed record TypeRef(
     bool IsOpenGeneric,
     int TypeArity = 0)
 {
-    public string Identifier
+  public string Identifier
+  {
+    get
     {
-        get
-        {
-            var chars = SimpleName.ToCharArray();
-            for (var i = 0; i < chars.Length; i++)
-            {
-                var c = chars[i];
-                if (!char.IsLetterOrDigit(c) && c != '_') chars[i] = '_';
-            }
-            return new string(chars);
-        }
+      var chars = SimpleName.ToCharArray();
+      for (var i = 0; i < chars.Length; i++)
+      {
+        var c = chars[i];
+        if (!char.IsLetterOrDigit(c) && c != '_') chars[i] = '_';
+      }
+      return new string(chars);
     }
+  }
 
-    /// <summary>
-    /// The fully-qualified name with any <c>&lt;...&gt;</c> suffix stripped, e.g.
-    /// <c>global::My.App.LoggingBehavior</c>. Used as a starting point when the
-    /// emitter needs to splice in its own type arguments.
-    /// </summary>
-    public string GlobalNameWithoutGenerics
+  /// <summary>
+  /// The fully-qualified name with any <c>&lt;...&gt;</c> suffix stripped, e.g.
+  /// <c>global::My.App.LoggingBehavior</c>. Used as a starting point when the
+  /// emitter needs to splice in its own type arguments.
+  /// </summary>
+  public string GlobalNameWithoutGenerics
+  {
+    get
     {
-        get
-        {
-            var idx = GlobalName.IndexOf('<');
-            return idx < 0 ? GlobalName : GlobalName.Substring(0, idx);
-        }
+      var idx = GlobalName.IndexOf('<');
+      return idx < 0 ? GlobalName : GlobalName.Substring(0, idx);
     }
+  }
 
-    /// <summary>
-    /// The unbound generic form for use in <c>typeof</c> expressions:
-    /// <c>global::My.App.LoggingBehavior&lt;,&gt;</c>. Returns
-    /// <see cref="GlobalName"/> when the type is non-generic.
-    /// </summary>
-    public string GlobalNameUnbound
+  /// <summary>
+  /// The unbound generic form for use in <c>typeof</c> expressions:
+  /// <c>global::My.App.LoggingBehavior&lt;,&gt;</c>. Returns
+  /// <see cref="GlobalName"/> when the type is non-generic.
+  /// </summary>
+  public string GlobalNameUnbound
+  {
+    get
     {
-        get
-        {
-            if (TypeArity == 0) return GlobalName;
-            var commas = TypeArity == 1 ? string.Empty : new string(',', TypeArity - 1);
-            return GlobalNameWithoutGenerics + "<" + commas + ">";
-        }
+      if (TypeArity == 0) return GlobalName;
+      var commas = TypeArity == 1 ? string.Empty : new string(',', TypeArity - 1);
+      return GlobalNameWithoutGenerics + "<" + commas + ">";
     }
+  }
 }

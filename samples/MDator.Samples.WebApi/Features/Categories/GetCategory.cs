@@ -9,21 +9,21 @@ public record GetCategoryResult(Category? Category);
 
 public sealed class GetCategoryHandler(ICategoryRepository repo) : IRequestHandler<GetCategoryQuery, GetCategoryResult>
 {
-    public async Task<GetCategoryResult> Handle(GetCategoryQuery request, CancellationToken ct)
-    {
-        var category = await repo.GetByIdAsync(request.Id, ct);
-        return new GetCategoryResult(category);
-    }
+  public async Task<GetCategoryResult> Handle(GetCategoryQuery request, CancellationToken ct)
+  {
+    var category = await repo.GetByIdAsync(request.Id, ct);
+    return new GetCategoryResult(category);
+  }
 }
 
 public static class GetCategoryEndpoint
 {
-    public static void Map(RouteGroupBuilder group)
+  public static void Map(RouteGroupBuilder group)
+  {
+    group.MapGet("/{id:guid}", async (Guid id, IMediator mediator) =>
     {
-        group.MapGet("/{id:guid}", async (Guid id, IMediator mediator) =>
-        {
-            var result = await mediator.Send(new GetCategoryQuery(id));
-            return result.Category is not null ? Results.Ok(result.Category) : Results.NotFound();
-        });
-    }
+      var result = await mediator.Send(new GetCategoryQuery(id));
+      return result.Category is not null ? Results.Ok(result.Category) : Results.NotFound();
+    });
+  }
 }

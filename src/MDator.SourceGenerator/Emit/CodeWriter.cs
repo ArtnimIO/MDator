@@ -9,36 +9,36 @@ namespace MDator.SourceGenerator;
 /// </summary>
 internal sealed class CodeWriter
 {
-    private readonly StringBuilder _sb = new();
-    private int _indent;
+  private readonly StringBuilder _sb = new();
+  private int _indent;
 
-    public CodeWriter Indent() { _indent++; return this; }
-    public CodeWriter Dedent() { _indent--; return this; }
+  public CodeWriter Indent() { _indent++; return this; }
+  public CodeWriter Dedent() { _indent--; return this; }
 
-    public CodeWriter Line(string text = "")
+  public CodeWriter Line(string text = "")
+  {
+    if (text.Length == 0)
     {
-        if (text.Length == 0)
-        {
-            _sb.AppendLine();
-            return this;
-        }
-        for (var i = 0; i < _indent; i++) _sb.Append("    ");
-        _sb.AppendLine(text);
-        return this;
+      _sb.AppendLine();
+      return this;
     }
+    for (var i = 0; i < _indent; i++) _sb.Append("    ");
+    _sb.AppendLine(text);
+    return this;
+  }
 
-    public CodeWriter OpenBrace()
-    {
-        Line("{");
-        return Indent();
-    }
+  public CodeWriter OpenBrace()
+  {
+    Line("{");
+    return Indent();
+  }
 
-    public CodeWriter CloseBrace()
-    {
-        return Dedent().Line("}");
-    }
+  public CodeWriter CloseBrace()
+  {
+    return Dedent().Line("}");
+  }
 
-    public CodeWriter CloseBraceWithSemicolon() => Dedent().Line("};");
+  public CodeWriter CloseBraceWithSemicolon() => Dedent().Line("};");
 
-    public override string ToString() => _sb.ToString();
+  public override string ToString() => _sb.ToString();
 }

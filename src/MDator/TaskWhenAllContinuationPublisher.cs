@@ -8,17 +8,17 @@ namespace MDator;
 /// </summary>
 public sealed class TaskWhenAllContinuationPublisher : INotificationPublisher
 {
-    /// <inheritdoc />
-    public Task Publish(
-        IReadOnlyList<NotificationHandlerExecutor> handlerExecutors,
-        INotification notification,
-        CancellationToken cancellationToken)
+  /// <inheritdoc />
+  public Task Publish(
+      IReadOnlyList<NotificationHandlerExecutor> handlerExecutors,
+      INotification notification,
+      CancellationToken cancellationToken)
+  {
+    var tasks = new Task[handlerExecutors.Count];
+    for (var i = 0; i < handlerExecutors.Count; i++)
     {
-        var tasks = new Task[handlerExecutors.Count];
-        for (var i = 0; i < handlerExecutors.Count; i++)
-        {
-            tasks[i] = Task.Run(() => handlerExecutors[i].HandlerCallback(notification, cancellationToken), cancellationToken);
-        }
-        return Task.WhenAll(tasks);
+      tasks[i] = Task.Run(() => handlerExecutors[i].HandlerCallback(notification, cancellationToken), cancellationToken);
     }
+    return Task.WhenAll(tasks);
+  }
 }

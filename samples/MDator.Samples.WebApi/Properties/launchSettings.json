@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "MDator.Samples.WebApi": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:50415;http://localhost:50416"
+    }
+  }
+}

@@ -11,6 +11,16 @@ list — this file curates the user-visible changes.
 
 ## [Unreleased]
 
+### Fixed
+
+- `AddMDator` no longer replays every generated registration callback on each
+  call. Composition roots that call `AddMDator` once per feature module ended
+  up registering every handler once per call — notification handlers then
+  fired that many times per `Publish` (seen in production as background jobs
+  executing 26 times). Callbacks are now applied at most once per
+  `IServiceCollection`; calling `AddMDator` on a fresh collection still
+  registers everything.
+
 ## [0.6.0] - 2026-05-18
 
 ### Changed

@@ -55,16 +55,32 @@ public static class MDatorServiceCollectionExtensions
           "generator runs, and that it actually contains at least one handler.");
     }
 
+    // Each callback must run at most once per service collection: composition
+    // roots that call AddMDator once per feature module would otherwise replay
+    // every callback per call, registering each handler N times — and
+    // INotificationHandlers then fire N times per publish. A marker descriptor
+    // on the collection records how many callbacks have already been applied.
+    var marker = (AppliedRegistrationsMarker?)services
+      .FirstOrDefault(d => d.ServiceType == typeof(AppliedRegistrationsMarker))
+      ?.ImplementationInstance;
+    if (marker is null)
+    {
+      marker = new AppliedRegistrationsMarker();
+      services.AddSingleton(marker);
+    }
+
     // Index loop, not foreach: invoking a registration callback can
     // trigger lazy load of a referenced handler-bearing assembly, whose
     // module initializer appends to MDatorGeneratedHook.Registrations. We
     // want those late arrivals to register too, so we re-read Count each
     // iteration rather than snapshotting (and we'd crash with "Collection
     // was modified" under foreach).
-    for (int i = 0; i < MDatorGeneratedHook.Registrations.Count; i++)
+    int applied;
+    for (applied = marker.AppliedCount; applied < MDatorGeneratedHook.Registrations.Count; applied++)
     {
-      MDatorGeneratedHook.Registrations[i](services, cfg);
+      MDatorGeneratedHook.Registrations[applied](services, cfg);
     }
+    marker.AppliedCount = applied;
 
     foreach (var (serviceType, implementationType, lifetime) in cfg.AdditionalBehaviors)
     {
@@ -75,6 +91,16 @@ public static class MDatorServiceCollectionExtensions
     services.AddSingleton(cfg.NotificationPublisher);
 
     return services;
+  }
+
+  /// <summary>
+  /// Per-<see cref="IServiceCollection"/> record of how many callbacks from
+  /// <see cref="MDatorGeneratedHook.Registrations"/> have been applied, so
+  /// repeated <see cref="AddMDator"/> calls don't replay them.
+  /// </summary>
+  private sealed class AppliedRegistrationsMarker
+  {
+    public int AppliedCount { get; set; }
   }
 }
 

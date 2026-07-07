@@ -11,6 +11,11 @@ list — this file curates the user-visible changes.
 
 ## [Unreleased]
 
+### Changed
+
+- Bumped shipped runtime dependencies `Microsoft.Bcl.AsyncInterfaces` and
+  `Microsoft.Extensions.DependencyInjection.Abstractions` to 10.0.8.
+
 ## [0.6.1] - 2026-06-12
 
 ### Fixed

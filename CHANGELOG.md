@@ -27,6 +27,10 @@ list — this file curates the user-visible changes.
 - Snapshot tests (Verify.SourceGenerators) covering the generator's emitted
   `MDatorGenerated.g.cs` for the main pipeline shapes, including the
   cross-assembly `[KnownRequest]` path.
+- The public API of `MDator` and `MDator.Abstractions` is now tracked with
+  `Microsoft.CodeAnalysis.PublicApiAnalyzers`. `PublicAPI.Shipped.txt` records
+  the surface as of 0.6.2; `PublicAPI.Unshipped.txt` records what this release
+  adds and removes. Any unlisted change to a public member fails the build.
 
 ### Changed
 

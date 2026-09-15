@@ -18,3 +18,11 @@ indent_size = 2
 
 [*.md]
 trim_trailing_whitespace = false
+
+# Public API surface is tracked by Microsoft.CodeAnalysis.PublicApiAnalyzers
+# (PublicAPI.Shipped.txt / PublicAPI.Unshipped.txt in src/MDator and
+# src/MDator.Abstractions). RS0026 flags overloads that differ only by optional
+# parameters; MDator mirrors MediatR's configuration API, which has them by
+# design, so the rule is off.
+[src/MDator*/**.cs]
+dotnet_diagnostic.RS0026.severity = none

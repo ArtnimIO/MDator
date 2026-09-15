@@ -1,0 +1,71 @@
+#nullable enable
+MDator.IBaseRequest
+MDator.IMediator
+MDator.INotification
+MDator.INotificationHandler<TNotification>
+MDator.INotificationHandler<TNotification>.Handle(TNotification notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.INotificationPublisher
+MDator.INotificationPublisher.Publish(System.Collections.Generic.IReadOnlyList<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.IPipelineBehavior<TRequest, TResponse>
+MDator.IPipelineBehavior<TRequest, TResponse>.Handle(TRequest request, MDator.RequestHandlerDelegate<TResponse>! next, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TResponse>!
+MDator.IPublisher
+MDator.IPublisher.Publish(object! notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+MDator.IPublisher.Publish<TNotification>(TNotification notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+MDator.IRequest
+MDator.IRequest<TResponse>
+MDator.IRequestExceptionAction<TRequest, TException>
+MDator.IRequestExceptionAction<TRequest, TException>.Execute(TRequest request, TException! exception, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.IRequestExceptionHandler<TRequest, TResponse, TException>
+MDator.IRequestExceptionHandler<TRequest, TResponse, TException>.Handle(TRequest request, TException! exception, MDator.RequestExceptionHandlerState<TResponse>! state, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.IRequestHandler<TRequest, TResponse>
+MDator.IRequestHandler<TRequest, TResponse>.Handle(TRequest request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TResponse>!
+MDator.IRequestHandler<TRequest>
+MDator.IRequestHandler<TRequest>.Handle(TRequest request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.IRequestPostProcessor<TRequest, TResponse>
+MDator.IRequestPostProcessor<TRequest, TResponse>.Process(TRequest request, TResponse response, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.IRequestPreProcessor<TRequest>
+MDator.IRequestPreProcessor<TRequest>.Process(TRequest request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.ISender
+MDator.ISender.CreateStream(object! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<object?>!
+MDator.ISender.CreateStream<TResponse>(MDator.IStreamRequest<TResponse>! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<TResponse>!
+MDator.ISender.Send(object! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<object?>!
+MDator.ISender.Send<TRequest>(TRequest request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+MDator.ISender.Send<TResponse>(MDator.IRequest<TResponse>! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+MDator.IStreamPipelineBehavior<TRequest, TResponse>
+MDator.IStreamPipelineBehavior<TRequest, TResponse>.Handle(TRequest request, MDator.StreamHandlerDelegate<TResponse>! next, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<TResponse>!
+MDator.IStreamRequest<TResponse>
+MDator.IStreamRequestHandler<TRequest, TResponse>
+MDator.IStreamRequestHandler<TRequest, TResponse>.Handle(TRequest request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<TResponse>!
+MDator.KnownRequestAttribute
+MDator.KnownRequestAttribute.KnownRequestAttribute(System.Type! requestType) -> void
+MDator.KnownRequestAttribute.RequestType.get -> System.Type!
+MDator.NotificationHandlerExecutor
+MDator.NotificationHandlerExecutor.HandlerCallback.get -> System.Func<MDator.INotification!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>!
+MDator.NotificationHandlerExecutor.HandlerInstance.get -> object!
+MDator.NotificationHandlerExecutor.NotificationHandlerExecutor() -> void
+MDator.NotificationHandlerExecutor.NotificationHandlerExecutor(object! handlerInstance, System.Func<MDator.INotification!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! callback) -> void
+MDator.OpenBehaviorAttribute
+MDator.OpenBehaviorAttribute.BehaviorType.get -> System.Type!
+MDator.OpenBehaviorAttribute.OpenBehaviorAttribute(System.Type! behaviorType) -> void
+MDator.OpenBehaviorAttribute.Order.get -> int
+MDator.OpenBehaviorAttribute.Order.set -> void
+MDator.RequestExceptionHandlerState<TResponse>
+MDator.RequestExceptionHandlerState<TResponse>.Handled.get -> bool
+MDator.RequestExceptionHandlerState<TResponse>.RequestExceptionHandlerState() -> void
+MDator.RequestExceptionHandlerState<TResponse>.Response.get -> TResponse?
+MDator.RequestExceptionHandlerState<TResponse>.SetHandled(TResponse response) -> void
+MDator.RequestHandlerDelegate<TResponse>
+MDator.StreamHandlerDelegate<TResponse>
+MDator.Unit
+MDator.Unit.CompareTo(MDator.Unit other) -> int
+MDator.Unit.Equals(MDator.Unit other) -> bool
+MDator.Unit.Unit() -> void
+override MDator.Unit.Equals(object? obj) -> bool
+override MDator.Unit.GetHashCode() -> int
+override MDator.Unit.ToString() -> string!
+static MDator.Unit.operator !=(MDator.Unit first, MDator.Unit second) -> bool
+static MDator.Unit.operator ==(MDator.Unit first, MDator.Unit second) -> bool
+static readonly MDator.Unit.Task -> System.Threading.Tasks.Task<MDator.Unit>!
+static readonly MDator.Unit.Value -> MDator.Unit
+virtual MDator.RequestHandlerDelegate<TResponse>.Invoke() -> System.Threading.Tasks.Task<TResponse>!
+virtual MDator.StreamHandlerDelegate<TResponse>.Invoke() -> System.Collections.Generic.IAsyncEnumerable<TResponse>!

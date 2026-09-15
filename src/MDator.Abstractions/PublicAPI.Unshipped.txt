@@ -1,0 +1,8 @@
+#nullable enable
+abstract MDator.NotificationHandler<TNotification>.Handle(TNotification notification) -> void
+MDator.INotificationPublisher.Publish(System.Collections.Generic.IEnumerable<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.NotificationHandler<TNotification>
+MDator.NotificationHandler<TNotification>.NotificationHandler() -> void
+virtual MDator.RequestHandlerDelegate<TResponse>.Invoke(System.Threading.CancellationToken t = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+*REMOVED*MDator.INotificationPublisher.Publish(System.Collections.Generic.IReadOnlyList<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+*REMOVED*virtual MDator.RequestHandlerDelegate<TResponse>.Invoke() -> System.Threading.Tasks.Task<TResponse>!

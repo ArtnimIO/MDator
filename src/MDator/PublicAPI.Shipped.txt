@@ -1,0 +1,39 @@
+#nullable enable
+MDator.ForEachAwaitPublisher
+MDator.ForEachAwaitPublisher.ForEachAwaitPublisher() -> void
+MDator.ForEachAwaitPublisher.Publish(System.Collections.Generic.IReadOnlyList<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.MDatorConfiguration
+MDator.MDatorConfiguration.AddBehavior(System.Type! serviceType, System.Type! implementationType, Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient) -> MDator.MDatorConfiguration!
+MDator.MDatorConfiguration.AddBehavior<TImplementation>(Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient) -> MDator.MDatorConfiguration!
+MDator.MDatorConfiguration.AdditionalBehaviors.get -> System.Collections.Generic.List<(System.Type! ServiceType, System.Type! ImplementationType, Microsoft.Extensions.DependencyInjection.ServiceLifetime Lifetime)>!
+MDator.MDatorConfiguration.FuseOnly.get -> bool
+MDator.MDatorConfiguration.FuseOnly.set -> void
+MDator.MDatorConfiguration.Lifetime.get -> Microsoft.Extensions.DependencyInjection.ServiceLifetime
+MDator.MDatorConfiguration.Lifetime.set -> void
+MDator.MDatorConfiguration.MDatorConfiguration() -> void
+MDator.MDatorConfiguration.NotificationPublisher.get -> MDator.INotificationPublisher!
+MDator.MDatorConfiguration.NotificationPublisher.set -> void
+MDator.MDatorConfiguration.OpenBehaviorTypes.get -> System.Collections.Generic.List<(System.Type! Type, int Order)>!
+MDator.MDatorConfiguration.RegisterGenericHandlers.get -> bool
+MDator.MDatorConfiguration.RegisterGenericHandlers.set -> void
+MDator.MDatorConfiguration.RegisterOpenBehavior(System.Type! type, int order) -> void
+MDator.MDatorConfiguration.RegisterServicesFromAssemblies(params System.Reflection.Assembly![]! assemblies) -> MDator.MDatorConfiguration!
+MDator.MDatorConfiguration.RegisterServicesFromAssembly(System.Reflection.Assembly! assembly) -> MDator.MDatorConfiguration!
+MDator.MDatorConfiguration.RegisterServicesFromAssemblyContaining<T>() -> MDator.MDatorConfiguration!
+MDator.MDatorGeneratedHook
+MDator.MDatorServiceCollectionExtensions
+MDator.RuntimeDispatch
+MDator.TaskWhenAllContinuationPublisher
+MDator.TaskWhenAllContinuationPublisher.Publish(System.Collections.Generic.IReadOnlyList<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.TaskWhenAllContinuationPublisher.TaskWhenAllContinuationPublisher() -> void
+MDator.TaskWhenAllPublisher
+MDator.TaskWhenAllPublisher.Publish(System.Collections.Generic.IReadOnlyList<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.TaskWhenAllPublisher.TaskWhenAllPublisher() -> void
+static MDator.MDatorGeneratedHook.Registrations.get -> System.Collections.Generic.List<System.Action<Microsoft.Extensions.DependencyInjection.IServiceCollection!, MDator.MDatorConfiguration!>!>!
+static MDator.MDatorServiceCollectionExtensions.AddMDator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<MDator.MDatorConfiguration!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static MDator.RuntimeDispatch.PublishFallback(System.IServiceProvider! sp, MDator.INotificationPublisher! publisher, MDator.INotification! notification, System.Threading.CancellationToken ct) -> System.Threading.Tasks.Task!
+static MDator.RuntimeDispatch.SendFallback<TResponse>(System.IServiceProvider! sp, MDator.MDatorConfiguration! cfg, MDator.IRequest<TResponse>! request, System.Threading.CancellationToken ct) -> System.Threading.Tasks.Task<TResponse>!
+static MDator.RuntimeDispatch.SendObjectFallback(System.IServiceProvider! sp, MDator.MDatorConfiguration! cfg, object! request, System.Threading.CancellationToken ct) -> System.Threading.Tasks.Task<object?>!
+static MDator.RuntimeDispatch.SendVoidFallback<TRequest>(System.IServiceProvider! sp, MDator.MDatorConfiguration! cfg, TRequest request, System.Threading.CancellationToken ct) -> System.Threading.Tasks.Task!
+static MDator.RuntimeDispatch.StreamFallback<TResponse>(System.IServiceProvider! sp, MDator.MDatorConfiguration! cfg, MDator.IStreamRequest<TResponse>! request, System.Threading.CancellationToken ct) -> System.Collections.Generic.IAsyncEnumerable<TResponse>!
+static MDator.RuntimeDispatch.StreamObjectFallback(System.IServiceProvider! sp, MDator.MDatorConfiguration! cfg, object! request, System.Threading.CancellationToken ct) -> System.Collections.Generic.IAsyncEnumerable<object?>!

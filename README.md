@@ -354,6 +354,31 @@ You can also apply `[assembly: KnownRequest(typeof(...))]` manually for
 requests whose closed generic form is never syntactically referenced in the
 consuming assembly.
 
+### Trimming and Native AOT
+
+Everything the generator emits is plain C#: compile-time `switch` dispatch,
+fused pipelines, and DI registrations with closed generic types. That path is
+trim- and AOT-safe, and `MDator` is marked `IsAotCompatible`.
+
+The one exception is `RuntimeDispatch`, the fallback for request and
+notification types no assembly advertises at compile time. It uses
+`MakeGenericMethod` and compiled expression trees and is annotated with
+`[RequiresUnreferencedCode]` and `[RequiresDynamicCode]`. If your project
+enables trim or AOT analysis (`PublishTrimmed`, `PublishAot`,
+`IsAotCompatible`), the generated `MDatorGenerated.g.cs` reports `IL2026` and
+`IL3050` at the fallback call sites. The warnings are accurate: a request that
+reaches the fallback in a trimmed or AOT-published app may fail at runtime.
+
+If every request your app sends is known at compile time (same assembly, a
+referenced assembly with handlers, or a manual `[assembly: KnownRequest]`), the
+fallback is never reached and you can silence the two codes for that project:
+
+```xml
+<PropertyGroup>
+  <NoWarn>$(NoWarn);IL2026;IL3050</NoWarn>
+</PropertyGroup>
+```
+
 ## Project structure
 
 ```

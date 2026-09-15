@@ -31,6 +31,18 @@ list — this file curates the user-visible changes.
   `Microsoft.CodeAnalysis.PublicApiAnalyzers`. `PublicAPI.Shipped.txt` records
   the surface as of 0.6.2; `PublicAPI.Unshipped.txt` records what this release
   adds and removes. Any unlisted change to a public member fails the build.
+- NuGet packages now ship symbol packages (`.snupkg`) with Source Link to
+  GitHub, and CI builds are deterministic (`ContinuousIntegrationBuild`).
+- `global.json` pins the build to the .NET 10 SDK line.
+- `MDator` is marked `IsAotCompatible`; its trim and AOT analyzers run in the
+  build. `RuntimeDispatch`, the reflection fallback for request types unknown
+  at compile time, is annotated with `[RequiresUnreferencedCode]` and
+  `[RequiresDynamicCode]`, so trimmed and AOT-published consumers get `IL2026`
+  / `IL3050` at the generated fallback call sites instead of silent runtime
+  failures. `MDatorConfiguration` methods that inspect a `Type`'s interfaces
+  carry `[DynamicallyAccessedMembers]`; `AddOpenBehaviors(IEnumerable<Type>)`
+  is `[RequiresUnreferencedCode]` because its elements cannot be. See the README
+  section "Trimming and Native AOT".
 
 ### Changed
 

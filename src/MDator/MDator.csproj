@@ -13,6 +13,11 @@
     <DevelopmentDependency>false</DevelopmentDependency>
     <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
 
+    <!-- Turns on the trim/AOT analyzers so every reflection path must be
+         annotated. RuntimeDispatch carries RequiresUnreferencedCode /
+         RequiresDynamicCode; everything else is compile-time dispatch. -->
+    <IsAotCompatible>true</IsAotCompatible>
+
     <!-- Roslyn version for multi-targeted analyzer packaging.
          The Nuke build overrides this per-version during packing. -->
     <ROSLYN_VERSION Condition="'$(ROSLYN_VERSION)' == ''">5.0</ROSLYN_VERSION>

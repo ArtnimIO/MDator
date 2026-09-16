@@ -5,7 +5,7 @@ MDator.INotification
 MDator.INotificationHandler<TNotification>
 MDator.INotificationHandler<TNotification>.Handle(TNotification notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 MDator.INotificationPublisher
-MDator.INotificationPublisher.Publish(System.Collections.Generic.IReadOnlyList<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.INotificationPublisher.Publish(System.Collections.Generic.IEnumerable<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 MDator.IPipelineBehavior<TRequest, TResponse>
 MDator.IPipelineBehavior<TRequest, TResponse>.Handle(TRequest request, MDator.RequestHandlerDelegate<TResponse>! next, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TResponse>!
 MDator.IPublisher
@@ -39,6 +39,8 @@ MDator.IStreamRequestHandler<TRequest, TResponse>.Handle(TRequest request, Syste
 MDator.KnownRequestAttribute
 MDator.KnownRequestAttribute.KnownRequestAttribute(System.Type! requestType) -> void
 MDator.KnownRequestAttribute.RequestType.get -> System.Type!
+MDator.NotificationHandler<TNotification>
+MDator.NotificationHandler<TNotification>.NotificationHandler() -> void
 MDator.NotificationHandlerExecutor
 MDator.NotificationHandlerExecutor.HandlerCallback.get -> System.Func<MDator.INotification!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>!
 MDator.NotificationHandlerExecutor.HandlerInstance.get -> object!
@@ -60,6 +62,7 @@ MDator.Unit
 MDator.Unit.CompareTo(MDator.Unit other) -> int
 MDator.Unit.Equals(MDator.Unit other) -> bool
 MDator.Unit.Unit() -> void
+abstract MDator.NotificationHandler<TNotification>.Handle(TNotification notification) -> void
 override MDator.Unit.Equals(object? obj) -> bool
 override MDator.Unit.GetHashCode() -> int
 override MDator.Unit.ToString() -> string!
@@ -67,5 +70,5 @@ static MDator.Unit.operator !=(MDator.Unit first, MDator.Unit second) -> bool
 static MDator.Unit.operator ==(MDator.Unit first, MDator.Unit second) -> bool
 static readonly MDator.Unit.Task -> System.Threading.Tasks.Task<MDator.Unit>!
 static readonly MDator.Unit.Value -> MDator.Unit
-virtual MDator.RequestHandlerDelegate<TResponse>.Invoke() -> System.Threading.Tasks.Task<TResponse>!
+virtual MDator.RequestHandlerDelegate<TResponse>.Invoke(System.Threading.CancellationToken t = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
 virtual MDator.StreamHandlerDelegate<TResponse>.Invoke() -> System.Collections.Generic.IAsyncEnumerable<TResponse>!

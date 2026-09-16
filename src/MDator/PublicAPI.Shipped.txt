@@ -1,10 +1,20 @@
 #nullable enable
 MDator.ForEachAwaitPublisher
 MDator.ForEachAwaitPublisher.ForEachAwaitPublisher() -> void
-MDator.ForEachAwaitPublisher.Publish(System.Collections.Generic.IReadOnlyList<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.ForeachAwaitPublisher
+MDator.ForeachAwaitPublisher.ForeachAwaitPublisher() -> void
+MDator.ForeachAwaitPublisher.Publish(System.Collections.Generic.IEnumerable<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 MDator.MDatorConfiguration
 MDator.MDatorConfiguration.AddBehavior(System.Type! serviceType, System.Type! implementationType, Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient) -> MDator.MDatorConfiguration!
 MDator.MDatorConfiguration.AddBehavior<TImplementation>(Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient) -> MDator.MDatorConfiguration!
+MDator.MDatorConfiguration.AddBehavior<TServiceType, TImplementationType>(Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient) -> MDator.MDatorConfiguration!
+MDator.MDatorConfiguration.AddOpenBehavior(System.Type! openBehaviorType, Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient) -> MDator.MDatorConfiguration!
+MDator.MDatorConfiguration.AddOpenBehaviors(System.Collections.Generic.IEnumerable<System.Type!>! openBehaviorTypes, Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient) -> MDator.MDatorConfiguration!
+MDator.MDatorConfiguration.AddOpenStreamBehavior(System.Type! openBehaviorType, Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient) -> MDator.MDatorConfiguration!
+MDator.MDatorConfiguration.AddStreamBehavior(System.Type! implementationType, Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient) -> MDator.MDatorConfiguration!
+MDator.MDatorConfiguration.AddStreamBehavior(System.Type! serviceType, System.Type! implementationType, Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient) -> MDator.MDatorConfiguration!
+MDator.MDatorConfiguration.AddStreamBehavior<TImplementationType>(Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient) -> MDator.MDatorConfiguration!
+MDator.MDatorConfiguration.AddStreamBehavior<TServiceType, TImplementationType>(Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient) -> MDator.MDatorConfiguration!
 MDator.MDatorConfiguration.AdditionalBehaviors.get -> System.Collections.Generic.List<(System.Type! ServiceType, System.Type! ImplementationType, Microsoft.Extensions.DependencyInjection.ServiceLifetime Lifetime)>!
 MDator.MDatorConfiguration.FuseOnly.get -> bool
 MDator.MDatorConfiguration.FuseOnly.set -> void
@@ -13,6 +23,8 @@ MDator.MDatorConfiguration.Lifetime.set -> void
 MDator.MDatorConfiguration.MDatorConfiguration() -> void
 MDator.MDatorConfiguration.NotificationPublisher.get -> MDator.INotificationPublisher!
 MDator.MDatorConfiguration.NotificationPublisher.set -> void
+MDator.MDatorConfiguration.NotificationPublisherType.get -> System.Type?
+MDator.MDatorConfiguration.NotificationPublisherType.set -> void
 MDator.MDatorConfiguration.OpenBehaviorTypes.get -> System.Collections.Generic.List<(System.Type! Type, int Order)>!
 MDator.MDatorConfiguration.RegisterGenericHandlers.get -> bool
 MDator.MDatorConfiguration.RegisterGenericHandlers.set -> void
@@ -24,10 +36,10 @@ MDator.MDatorGeneratedHook
 MDator.MDatorServiceCollectionExtensions
 MDator.RuntimeDispatch
 MDator.TaskWhenAllContinuationPublisher
-MDator.TaskWhenAllContinuationPublisher.Publish(System.Collections.Generic.IReadOnlyList<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.TaskWhenAllContinuationPublisher.Publish(System.Collections.Generic.IEnumerable<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 MDator.TaskWhenAllContinuationPublisher.TaskWhenAllContinuationPublisher() -> void
 MDator.TaskWhenAllPublisher
-MDator.TaskWhenAllPublisher.Publish(System.Collections.Generic.IReadOnlyList<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+MDator.TaskWhenAllPublisher.Publish(System.Collections.Generic.IEnumerable<MDator.NotificationHandlerExecutor>! handlerExecutors, MDator.INotification! notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 MDator.TaskWhenAllPublisher.TaskWhenAllPublisher() -> void
 static MDator.MDatorGeneratedHook.Registrations.get -> System.Collections.Generic.List<System.Action<Microsoft.Extensions.DependencyInjection.IServiceCollection!, MDator.MDatorConfiguration!>!>!
 static MDator.MDatorServiceCollectionExtensions.AddMDator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<MDator.MDatorConfiguration!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

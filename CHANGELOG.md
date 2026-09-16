@@ -43,6 +43,10 @@ list — this file curates the user-visible changes.
   carry `[DynamicallyAccessedMembers]`; `AddOpenBehaviors(IEnumerable<Type>)`
   is `[RequiresUnreferencedCode]` because its elements cannot be. See the README
   section "Trimming and Native AOT".
+- CI now runs on Windows as well as Ubuntu, runs the test suite on both
+  net9.0 and net10.0 (the shipped net9.0 assembly was never executed before),
+  and builds the samples against the freshly packed nupkg via the
+  `SampleCompile` target so they cannot rot silently.
 
 ### Changed
 

@@ -136,14 +136,24 @@ class Build : FalloutBuild
       {
         var samplesSolution = RootDirectory / "samples" / "Samples.slnx";
 
+        // Build the samples against the nupkg just produced, not the version
+        // pinned for standalone use. A private package folder keeps a stale
+        // copy of the same version in the global cache from being picked up.
+        AbsolutePath samplePackages = OutputDirectory / "sample-packages";
+        samplePackages.CreateOrCleanDirectory();
+
         DotNetTasks.DotNetRestore(s => s
               .SetProjectFile(samplesSolution)
-              .AddSources(OutputDirectory));
+              .AddSources(OutputDirectory, "https://api.nuget.org/v3/index.json")
+              .SetPackageDirectory(samplePackages)
+              .SetProperty("MDatorPackageVersion", Version));
 
         DotNetTasks.DotNetBuild(s => s
               .SetProjectFile(samplesSolution)
               .SetConfiguration(Configuration)
-              .SetNoRestore(true));
+              .SetNoRestore(true)
+              .SetProperty("RestorePackagesPath", samplePackages)
+              .SetProperty("MDatorPackageVersion", Version));
       });
 
   Target Publish => _ => _

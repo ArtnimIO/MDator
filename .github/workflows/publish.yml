@@ -13,7 +13,11 @@ env:
 
 jobs:
   build-test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
 
@@ -23,8 +27,8 @@ jobs:
             9.0.x
             10.0.x
 
-      - name: Build, Test & Pack
-        run: ./build.sh Compile Test Pack
+      - name: Build, Test, Pack & Compile samples
+        run: ${{ runner.os == 'Windows' && './build.cmd' || './build.sh' }} Compile Test Pack SampleCompile
 
   publish:
     needs: build-test

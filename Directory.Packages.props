@@ -2,6 +2,10 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <!-- MDator version the samples build against when not using source
+         references. The SampleCompile build target overrides this with the
+         version it just packed. -->
+    <MDatorPackageVersion Condition="'$(MDatorPackageVersion)' == ''">0.2.4</MDatorPackageVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
@@ -28,6 +32,6 @@
     <PackageVersion Update="System.Security.Cryptography.Xml" Version="9.0.15" />
   </ItemGroup>
   <ItemGroup Condition="'$(UseMDatorSource)' != 'true'">
-    <PackageVersion Include="MDator" Version="0.2.4" />
+    <PackageVersion Include="MDator" Version="$(MDatorPackageVersion)" />
   </ItemGroup>
 </Project>

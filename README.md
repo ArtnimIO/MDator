@@ -308,7 +308,7 @@ MDator ships three assemblies:
 | Assembly | TFM | Purpose |
 |---|---|---|
 | `MDator.Abstractions` | netstandard2.0 | Interfaces, `Unit`, attributes. Reference this from handler libraries. |
-| `MDator` | net9.0, net10.0 | Runtime shell: `AddMDator`, `MDatorConfiguration`, notification publishers. |
+| `MDator` | net10.0 | Runtime shell: `AddMDator`, `MDatorConfiguration`, notification publishers. |
 | `MDator.SourceGenerator` | netstandard2.0 | Roslyn incremental source generator, shipped as an analyzer. |
 
 When you reference `MDator`, the generator activates in the consuming project
@@ -385,7 +385,7 @@ fallback is never reached and you can silence the two codes for that project:
 MDator.slnx
 src/
   MDator.Abstractions/     netstandard2.0 -- interfaces, Unit, attributes
-  MDator/                  net9.0;net10.0 -- runtime, DI extensions, publishers
+  MDator/                  net10.0 -- runtime, DI extensions, publishers
   MDator.SourceGenerator/  netstandard2.0 -- incremental generator (analyzer)
 tests/
   MDator.Tests/                net10.0, xUnit -- integration tests

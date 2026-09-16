@@ -11,6 +11,8 @@ list — this file curates the user-visible changes.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-16
+
 ### Added
 
 - MediatR v12 source-compatibility surface: `MDatorConfiguration` gains
@@ -127,7 +129,8 @@ list — this file curates the user-visible changes.
 
 For prior releases see the [GitHub Releases](https://github.com/ArtnimIO/MDator/releases).
 
-[Unreleased]: https://github.com/ArtnimIO/MDator/compare/v0.6.2...HEAD
+[Unreleased]: https://github.com/ArtnimIO/MDator/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/ArtnimIO/MDator/compare/v0.6.2...v0.7.0
 [0.6.2]: https://github.com/ArtnimIO/MDator/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/ArtnimIO/MDator/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/ArtnimIO/MDator/compare/v0.5.0...v0.6.0

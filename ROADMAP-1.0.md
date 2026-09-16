@@ -95,13 +95,15 @@ Merged in [#85](https://github.com/ArtnimIO/MDator/pull/85) (2026-09-16).
   section. A generator switch that omits the fallback arms is a possible
   follow-up, not a 1.0 blocker.
 
-## 5. Widen and harden CI — Open
+## 5. Widen and harden CI — Done
 
-- CI runs on Ubuntu only. Add a Windows leg.
-- Tests run on net10.0 only; the shipped net9.0 assembly is never executed.
-  Run tests per TFM.
-- The `SampleCompile` build target is never invoked in CI, so samples can rot
-  silently. Add it to the PR workflow.
+Merged in [#86](https://github.com/ArtnimIO/MDator/pull/86) (2026-09-16).
+
+- CI runs on Ubuntu and Windows.
+- Tests target `net9.0;net10.0`, so the shipped net9.0 assembly is executed.
+- `SampleCompile` runs in the PR workflow and builds the samples against the
+  nupkg just packed (overridable `MDatorPackageVersion`, nuget.org kept as a
+  restore source, private package folder).
 
 ## 6. Decide the TFM floor — Open (decision, not code)
 

@@ -107,7 +107,7 @@ class Build : FalloutBuild
                 .SetProperty("ROSLYN_VERSION", roslynVersion));
 
           // Pack MDator.csproj which bundles the freshly-built generator DLL.
-          // --no-build is safe: the MDator runtime assemblies (net9.0/net10.0)
+          // --no-build is safe: the MDator runtime assembly (net10.0)
           // were already compiled during the Compile step and don't change.
           AbsolutePath versionOutputDir = stagingDir / $"roslyn-{roslynVersion}";
           DotNetTasks.DotNetPack(s => s

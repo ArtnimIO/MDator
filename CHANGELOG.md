@@ -10,6 +10,13 @@ and pushes to NuGet. GitHub auto-generated release notes cover the full commit
 list — this file curates the user-visible changes.
 
 ## [Unreleased]
+### Removed
+
+- The `net9.0` target of `MDator`. .NET 9 leaves support on 2026-11-10, the
+  same day as .NET 8, so 1.0 targets `net10.0` only; a target framework
+  cannot be removed after 1.0 without a major bump. `MDator.Abstractions` and
+  the source generator stay `netstandard2.0`, so handler libraries are not
+  affected; only the project that calls `AddMDator` needs .NET 10.
 
 ## [0.7.0] - 2026-09-16
 

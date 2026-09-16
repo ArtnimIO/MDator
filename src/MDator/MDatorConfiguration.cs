@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MDator;
@@ -134,7 +135,9 @@ public sealed class MDatorConfiguration
   /// skipped when <see cref="FuseOnly"/> is enabled — use
   /// <see cref="OpenBehaviorAttribute"/> for compile-time fusion instead.
   /// </summary>
-  public MDatorConfiguration AddOpenBehavior(Type openBehaviorType, ServiceLifetime lifetime = ServiceLifetime.Transient)
+  public MDatorConfiguration AddOpenBehavior(
+      [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type openBehaviorType,
+      ServiceLifetime lifetime = ServiceLifetime.Transient)
   {
     RequireOpenImplementationOf(openBehaviorType, typeof(IPipelineBehavior<,>));
     AdditionalBehaviors.Add((typeof(IPipelineBehavior<,>), openBehaviorType, lifetime));
@@ -144,6 +147,7 @@ public sealed class MDatorConfiguration
   /// <summary>
   /// Registers multiple open generic behaviors. Mirrors MediatR's <c>AddOpenBehaviors</c>.
   /// </summary>
+  [RequiresUnreferencedCode("The interfaces of the supplied types may be trimmed. Call AddOpenBehavior(Type) per type instead; its parameter preserves them.")]
   public MDatorConfiguration AddOpenBehaviors(IEnumerable<Type> openBehaviorTypes, ServiceLifetime lifetime = ServiceLifetime.Transient)
   {
     foreach (var type in openBehaviorTypes) AddOpenBehavior(type, lifetime);
@@ -153,7 +157,7 @@ public sealed class MDatorConfiguration
   /// <summary>
   /// Registers a closed stream behavior at runtime.
   /// </summary>
-  public MDatorConfiguration AddStreamBehavior<TImplementationType>(ServiceLifetime lifetime = ServiceLifetime.Transient)
+  public MDatorConfiguration AddStreamBehavior<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] TImplementationType>(ServiceLifetime lifetime = ServiceLifetime.Transient)
       where TImplementationType : class
   {
     return AddStreamBehavior(typeof(TImplementationType), lifetime);
@@ -173,7 +177,9 @@ public sealed class MDatorConfiguration
   /// Registers a closed stream behavior at runtime under every
   /// <see cref="IStreamPipelineBehavior{TRequest, TResponse}"/> interface it implements.
   /// </summary>
-  public MDatorConfiguration AddStreamBehavior(Type implementationType, ServiceLifetime lifetime = ServiceLifetime.Transient)
+  public MDatorConfiguration AddStreamBehavior(
+      [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type implementationType,
+      ServiceLifetime lifetime = ServiceLifetime.Transient)
   {
     var serviceTypes = implementationType.GetInterfaces()
         .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStreamPipelineBehavior<,>))
@@ -202,14 +208,18 @@ public sealed class MDatorConfiguration
   /// implementation, closed per request type by the container. Runs on the runtime
   /// enumeration path, so it is skipped when <see cref="FuseOnly"/> is enabled.
   /// </summary>
-  public MDatorConfiguration AddOpenStreamBehavior(Type openBehaviorType, ServiceLifetime lifetime = ServiceLifetime.Transient)
+  public MDatorConfiguration AddOpenStreamBehavior(
+      [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type openBehaviorType,
+      ServiceLifetime lifetime = ServiceLifetime.Transient)
   {
     RequireOpenImplementationOf(openBehaviorType, typeof(IStreamPipelineBehavior<,>));
     AdditionalBehaviors.Add((typeof(IStreamPipelineBehavior<,>), openBehaviorType, lifetime));
     return this;
   }
 
-  private static void RequireOpenImplementationOf(Type openBehaviorType, Type openInterface)
+  private static void RequireOpenImplementationOf(
+      [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type openBehaviorType,
+      Type openInterface)
   {
     var implementsInterface = openBehaviorType.IsGenericTypeDefinition && openBehaviorType
         .GetInterfaces()

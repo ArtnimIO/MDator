@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -23,6 +24,14 @@ namespace MDator;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class RuntimeDispatch
 {
+  private const string TrimMessage =
+      "Runtime dispatch resolves handlers for request types the generator did not see at compile time. " +
+      "Their handlers may have been trimmed. Make the type known via [assembly: KnownRequest] to use the compile-time path.";
+
+  private const string AotMessage =
+      "Runtime dispatch closes generic methods and compiles expression trees over types unknown at compile time. " +
+      "Make the type known via [assembly: KnownRequest] to use the compile-time path.";
+
   // ── Cached MethodInfo for the typed fallback workers ─────────────────
 
   private static readonly MethodInfo s_sendTyped =
@@ -91,6 +100,8 @@ public static class RuntimeDispatch
   /// Fallback for <c>Send&lt;TResponse&gt;(IRequest&lt;TResponse&gt;)</c> when
   /// the request type is not in the compile-time switch.
   /// </summary>
+  [RequiresUnreferencedCode(TrimMessage)]
+  [RequiresDynamicCode(AotMessage)]
   public static Task<TResponse> SendFallback<TResponse>(
       IServiceProvider sp, MDatorConfiguration cfg,
       IRequest<TResponse> request, CancellationToken ct)
@@ -101,6 +112,8 @@ public static class RuntimeDispatch
     return thunk(sp, cfg, request, ct);
   }
 
+  [RequiresUnreferencedCode(TrimMessage)]
+  [RequiresDynamicCode(AotMessage)]
   private static Delegate BuildSendThunk((Type Req, Type Resp) key)
   {
     var (reqType, respType) = key;
@@ -149,6 +162,8 @@ public static class RuntimeDispatch
   /// Fallback for <c>Send&lt;TRequest&gt;(TRequest)</c> (void) when the request
   /// type is not in the compile-time switch.
   /// </summary>
+  [RequiresUnreferencedCode(TrimMessage)]
+  [RequiresDynamicCode(AotMessage)]
   public static Task SendVoidFallback<TRequest>(
       IServiceProvider sp, MDatorConfiguration cfg,
       TRequest request, CancellationToken ct)
@@ -158,6 +173,8 @@ public static class RuntimeDispatch
     return thunk(sp, cfg, request, ct);
   }
 
+  [RequiresUnreferencedCode(TrimMessage)]
+  [RequiresDynamicCode(AotMessage)]
   private static SendVoidThunk BuildSendVoidThunk(Type reqType)
   {
     var typedMethod = s_sendVoidTyped.MakeGenericMethod(reqType);
@@ -198,6 +215,8 @@ public static class RuntimeDispatch
   /// Fallback for <c>Send(object)</c> when the request type is not in the
   /// compile-time switch.
   /// </summary>
+  [RequiresUnreferencedCode(TrimMessage)]
+  [RequiresDynamicCode(AotMessage)]
   public static Task<object?> SendObjectFallback(
       IServiceProvider sp, MDatorConfiguration cfg,
       object request, CancellationToken ct)
@@ -206,6 +225,8 @@ public static class RuntimeDispatch
     return thunk(sp, cfg, request, ct);
   }
 
+  [RequiresUnreferencedCode(TrimMessage)]
+  [RequiresDynamicCode(AotMessage)]
   private static SendObjectThunk BuildSendObjectThunk(Type reqType)
   {
     var spP = Expression.Parameter(typeof(IServiceProvider), "sp");
@@ -257,6 +278,8 @@ public static class RuntimeDispatch
   /// Fallback for <c>CreateStream&lt;TResponse&gt;(IStreamRequest&lt;TResponse&gt;)</c>
   /// when the request type is not in the compile-time switch.
   /// </summary>
+  [RequiresUnreferencedCode(TrimMessage)]
+  [RequiresDynamicCode(AotMessage)]
   public static IAsyncEnumerable<TResponse> StreamFallback<TResponse>(
       IServiceProvider sp, MDatorConfiguration cfg,
       IStreamRequest<TResponse> request, CancellationToken ct)
@@ -267,6 +290,8 @@ public static class RuntimeDispatch
     return thunk(sp, cfg, request, ct);
   }
 
+  [RequiresUnreferencedCode(TrimMessage)]
+  [RequiresDynamicCode(AotMessage)]
   private static Delegate BuildStreamThunk((Type Req, Type Resp) key)
   {
     var (reqType, respType) = key;
@@ -300,6 +325,8 @@ public static class RuntimeDispatch
   /// Fallback for <c>CreateStream(object)</c> when the request type is not
   /// in the compile-time switch.
   /// </summary>
+  [RequiresUnreferencedCode(TrimMessage)]
+  [RequiresDynamicCode(AotMessage)]
   public static IAsyncEnumerable<object?> StreamObjectFallback(
       IServiceProvider sp, MDatorConfiguration cfg,
       object request, CancellationToken ct)
@@ -308,6 +335,8 @@ public static class RuntimeDispatch
     return thunk(sp, cfg, request, ct);
   }
 
+  [RequiresUnreferencedCode(TrimMessage)]
+  [RequiresDynamicCode(AotMessage)]
   private static StreamObjectThunk BuildStreamObjectThunk(Type reqType)
   {
     foreach (var iface in reqType.GetInterfaces())
@@ -353,6 +382,8 @@ public static class RuntimeDispatch
   /// instances from DI for the runtime notification type and dispatches them
   /// through the active <see cref="INotificationPublisher"/>.
   /// </summary>
+  [RequiresUnreferencedCode(TrimMessage)]
+  [RequiresDynamicCode(AotMessage)]
   public static Task PublishFallback(
       IServiceProvider sp, INotificationPublisher publisher,
       INotification notification, CancellationToken ct)
@@ -361,6 +392,8 @@ public static class RuntimeDispatch
     return thunk(sp, publisher, notification, ct);
   }
 
+  [RequiresUnreferencedCode(TrimMessage)]
+  [RequiresDynamicCode(AotMessage)]
   private static PublishThunk BuildPublishThunk(Type notifType)
   {
     var typedMethod = s_publishTyped.MakeGenericMethod(notifType);

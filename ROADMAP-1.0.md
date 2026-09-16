@@ -60,12 +60,11 @@ that the PR adds:
   solution, not a trap.
 - MediatR knobs that are structurally N/A for a source-generated mediator.
 
-## 3. Lock the public API — In review
+## 3. Lock the public API — Done
 
-Draft [#84](https://github.com/ArtnimIO/MDator/pull/84), branch
-`worktree-lock-public-api`, not yet merged.
+Merged in [#84](https://github.com/ArtnimIO/MDator/pull/84) (2026-09-15).
 
-1.0 means no breaking changes until 2.0. The PR makes the build enforce it:
+1.0 means no breaking changes until 2.0. The build now enforces it:
 
 - `Microsoft.CodeAnalysis.PublicApiAnalyzers` on `MDator` and
   `MDator.Abstractions`. `PublicAPI.Shipped.txt` is the 0.6.2 surface;
@@ -77,17 +76,24 @@ Draft [#84](https://github.com/ArtnimIO/MDator/pull/84), branch
 At each release, fold Unshipped into Shipped. Removing `ForEachAwaitPublisher`
 at 1.0 goes through `*REMOVED*` lines like any other break.
 
-## 4. NuGet package hygiene — Open
+## 4. NuGet package hygiene — Done
 
-All absent today:
+Merged in [#85](https://github.com/ArtnimIO/MDator/pull/85) (2026-09-16).
 
-- SourceLink (`Microsoft.SourceLink.GitHub`), symbol packages (`snupkg`),
-  `ContinuousIntegrationBuild`, `EmbedUntrackedSources`.
-- `global.json` pinning the CI SDK.
-- Trimming / AOT decision: `RuntimeDispatch` uses `Expression.Compile()` and
-  `MakeGenericMethod` with no `RequiresUnreferencedCode` /
-  `RequiresDynamicCode` annotations, so NativeAOT consumers get silent
-  breakage instead of warnings. Annotate it or document it.
+- Symbol packages (`snupkg`), `PublishRepositoryUrl`,
+  `ContinuousIntegrationBuild` under GitHub Actions. Source Link and
+  `EmbedUntrackedSources` come from the .NET SDK, so no package reference.
+  The Pack target carries the symbol package through the per-Roslyn merge;
+  the release uploads it.
+- `global.json` pins the .NET 10 SDK line (`latestFeature`, no prerelease).
+- Trimming / AOT, decided: annotate and enforce. `MDator` is
+  `IsAotCompatible`; `RuntimeDispatch` is `RequiresUnreferencedCode` +
+  `RequiresDynamicCode`, so trimmed and AOT consumers get `IL2026` /
+  `IL3050` at the generated fallback call sites. `MDatorConfiguration`
+  `Type` parameters that reach `GetInterfaces()` carry
+  `DynamicallyAccessedMembers`. README has a "Trimming and Native AOT"
+  section. A generator switch that omits the fallback arms is a possible
+  follow-up, not a 1.0 blocker.
 
 ## 5. Widen and harden CI — Open
 

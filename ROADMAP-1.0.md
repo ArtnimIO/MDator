@@ -99,16 +99,21 @@ Merged in [#85](https://github.com/ArtnimIO/MDator/pull/85) (2026-09-16).
 Merged in [#86](https://github.com/ArtnimIO/MDator/pull/86) (2026-09-16).
 
 - CI runs on Ubuntu and Windows.
-- Tests target `net9.0;net10.0`, so the shipped net9.0 assembly is executed.
+- Tests run on every target framework of `MDator` (a single one, net10.0,
+  since #89).
 - `SampleCompile` runs in the PR workflow and builds the samples against the
   nupkg just packed (overridable `MDatorPackageVersion`, nuget.org kept as a
   restore source, private package folder).
 
-## 6. Decide the TFM floor — Open (decision, not code)
+## 6. Decide the TFM floor — Done
 
-`MDator` targets `net9.0;net10.0`. MediatR supports netstandard2.0 / net6.0+,
-so anyone on net8.0 LTS cannot adopt MDator. Adding a TFM later is easy;
-removing one is a breaking change. Decide before tagging 1.0.
+Merged in [#89](https://github.com/ArtnimIO/MDator/pull/89) (2026-09-16).
+
+Decision: `MDator` targets `net10.0` only. .NET 8 and .NET 9 both leave
+support on 2026-11-10, so net8.0 gains no adopters and net9.0 would tie 1.x
+to an out-of-support runtime (a TFM cannot be removed after 1.0). .NET 10 is
+LTS until 2028-11-14. `MDator.Abstractions` and the generator stay
+netstandard2.0, so handler libraries are unaffected.
 
 ## 7. Fill the known test holes — Open
 

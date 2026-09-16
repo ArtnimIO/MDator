@@ -3,7 +3,7 @@
 Condensed from the maturity assessment of 2026-08-19. The code itself is in
 good shape; the gaps are about the *guarantees* a 1.0 promises: pinned
 generator output, a stable public API, MediatR source compatibility, and
-package hygiene. Status reflects `origin/main` as of 2026-09-15.
+package hygiene. Status reflects `origin/main` as of 2026-09-16.
 
 Feature work (cross-assembly dispatch, analyzers, known limitations) is
 tracked separately in [ROADMAP.md](ROADMAP.md).
@@ -22,13 +22,12 @@ Merged in [#76](https://github.com/ArtnimIO/MDator/pull/76) (2026-08-19).
   `Microsoft.CodeAnalysis.CSharp`. The 0.5.0–0.6.1 class of silent packaging
   breakage fails the build.
 
-## 2. Close the MediatR v12 compat gaps — In review
+## 2. Close the MediatR v12 compat gaps — Done
 
-Draft [#77](https://github.com/ArtnimIO/MDator/pull/77), branch
-`compat/mediatr-v12-parity`, not yet merged.
+Merged in [#77](https://github.com/ArtnimIO/MDator/pull/77) (2026-08-19).
 
-The README promises migration is "a namespace find-replace". The PR makes
-that true for:
+The README promises migration is "a namespace find-replace". That now holds
+for:
 
 - `RequestHandlerDelegate<T>` optional `CancellationToken` parameter
   (MediatR 12.3+), threaded through generated pipelines and the runtime
@@ -134,9 +133,8 @@ behavior lifetimes.
 
 | Release | Scope |
 |---------|-------|
-| 0.7 | Items 1–2: snapshot tests, packaging assertion, compat fixes |
-| 0.8 | Items 3–5: PublicAPI analyzer, SourceLink / deterministic builds, CI matrix |
-| 0.9 | Items 6–8: TFM decision, benchmarks, docs |
+| 0.7 | Items 1–5: snapshot tests, packaging assertion, compat fixes, PublicAPI analyzer, SourceLink / symbols, AOT annotations, CI matrix |
+| 0.8 | Items 6–8: TFM decision, benchmarks, docs |
 | 1.0 | Remove obsolete aliases (`ForEachAwaitPublisher`), resolve the namespace-split decision, tag |
 
 Items 1–3 are the 1.0 blockers. Item 6 must be *decided* before 1.0 even if

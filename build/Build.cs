@@ -123,7 +123,7 @@ class Build : FalloutBuild
 
         // The symbol package only carries lib/ pdbs, which are identical across
         // Roslyn versions, so any one of them can accompany the merged nupkg.
-        var snupkg = stagingDir.GlobFiles("**/*.snupkg").OrderBy(p => p.ToString()).First();
+        var snupkg = stagingDir.GlobFiles("**/*.snupkg").First();
         File.Copy(snupkg, OutputDirectory / snupkg.Name, overwrite: true);
 
         stagingDir.DeleteDirectory();

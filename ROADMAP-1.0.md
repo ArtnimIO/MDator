@@ -60,12 +60,11 @@ that the PR adds:
   solution, not a trap.
 - MediatR knobs that are structurally N/A for a source-generated mediator.
 
-## 3. Lock the public API — In review
+## 3. Lock the public API — Done
 
-Draft [#84](https://github.com/ArtnimIO/MDator/pull/84), branch
-`worktree-lock-public-api`, not yet merged.
+Merged in [#84](https://github.com/ArtnimIO/MDator/pull/84) (2026-09-15).
 
-1.0 means no breaking changes until 2.0. The PR makes the build enforce it:
+1.0 means no breaking changes until 2.0. The build now enforces it:
 
 - `Microsoft.CodeAnalysis.PublicApiAnalyzers` on `MDator` and
   `MDator.Abstractions`. `PublicAPI.Shipped.txt` is the 0.6.2 surface;
@@ -77,10 +76,9 @@ Draft [#84](https://github.com/ArtnimIO/MDator/pull/84), branch
 At each release, fold Unshipped into Shipped. Removing `ForEachAwaitPublisher`
 at 1.0 goes through `*REMOVED*` lines like any other break.
 
-## 4. NuGet package hygiene — In review
+## 4. NuGet package hygiene — Done
 
-Draft [#85](https://github.com/ArtnimIO/MDator/pull/85), branch
-`worktree-package-hygiene`, not yet merged.
+Merged in [#85](https://github.com/ArtnimIO/MDator/pull/85) (2026-09-16).
 
 - Symbol packages (`snupkg`), `PublishRepositoryUrl`,
   `ContinuousIntegrationBuild` under GitHub Actions. Source Link and
